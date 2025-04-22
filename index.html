@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Compras v4.11.5 - Toggle Categoria Header</title>
+    <title>Lista de Compras v4.11.6 - Adicionar Preço/Data</title>
     <meta name="theme-color" content="#4CAF50"/>
     <link rel="apple-touch-icon" href="icon-192x192.png">
 
@@ -21,7 +21,10 @@
         .control-group { display: flex; flex-direction: column; gap: 5px; }
         .control-group label { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #495057; }
         .input-icon { width: 18px; height: 18px; fill: #6c757d; flex-shrink: 0; }
-        #controles-principais input[type="date"], #controles-principais input[type="text"], #controles-principais select { padding: 10px; border: 1px solid #ced4da; border-radius: 4px; width: 100%; font-size: 1em; }
+        #controles-principais input[type="date"], #controles-principais input[type="text"], #controles-principais input[type="number"], #controles-principais select { padding: 10px; border: 1px solid #ced4da; border-radius: 4px; width: 100%; font-size: 1em; }
+        #controles-principais input[type="number"] { -moz-appearance: textfield; }
+        #controles-principais input[type="number"]::-webkit-outer-spin-button,
+        #controles-principais input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         #controles-principais button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; transition: background-color 0.2s ease; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; width: 100%; }
         #controles-principais button:hover { background-color: #0056b3; }
         .form-novo-produto-inner { display: flex; flex-direction: column; gap: 15px; }
@@ -73,8 +76,8 @@
         h2.header-content-hidden .titulo-categoria,
         h2.header-content-hidden .cabecalho-acoes,
         h2.header-content-hidden .cabecalho-info { display: none; }
-        h2.header-content-hidden { justify-content: flex-start; } /* Realign remaining items */
-        h2.header-content-hidden .btn-toggle-header-content { margin-left: 10px; } /* Add space after emoji */
+        h2.header-content-hidden { justify-content: flex-start; }
+        h2.header-content-hidden .btn-toggle-header-content { margin-left: 10px; }
 
         .controles-acoes-gerais { margin-bottom: 20px; padding: 15px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
         .controles-acoes-gerais button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; transition: background-color 0.2s ease; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
@@ -167,9 +170,10 @@
             #controles-principais .control-group { flex-direction: column; flex-grow: 1; gap: 5px; }
             #controles-principais .control-group-date { flex-grow: 0; width: 150px; }
             #controles-principais .control-group-search { flex-grow: 2; }
-            #controles-principais .control-group-add { flex-grow: 2; flex-direction: row; align-items: flex-end; gap: 10px; }
+            #controles-principais .control-group-add { flex-grow: 3; flex-direction: row; align-items: flex-end; gap: 10px; }
             .form-novo-produto-inner { flex-direction: row; flex-grow: 1; gap: 10px; }
-            .form-novo-produto-inner > div { flex-grow: 1; min-width: 150px; }
+            .form-novo-produto-inner > div { flex-grow: 1; min-width: 100px; }
+            .form-novo-produto-inner > .div-novo-produto-nome { flex-grow: 2; }
             #controles-principais button { width: auto; flex-shrink: 0; }
             #controles-filtros-globais { justify-content: flex-start; }
             .item-lista { flex-direction: row; align-items: center; }
@@ -209,11 +213,12 @@
             h2.header-content-hidden .cabecalho-info { display: none; }
             h2.header-content-hidden { gap: 0 10px; }
             h2.header-content-hidden .drag-handle { margin-right: 0;}
-            h2.header-content-hidden .emoji { margin-right: auto; } /* Push toggle buttons to the right */
+            h2.header-content-hidden .emoji { margin-right: auto; }
             h2.header-content-hidden .btn-toggle-header-content { margin-left: 5px; }
 
-            #controles-principais input[type="date"], #controles-principais input[type="text"], #controles-principais select { width: 100%; margin-bottom: 0; }
-            .form-novo-produto-inner { width: 100%; } .form-novo-produto-inner > div { width: 100%; }
+            #controles-principais input[type="date"], #controles-principais input[type="text"], #controles-principais input[type="number"], #controles-principais select { width: 100%; margin-bottom: 0; }
+            .form-novo-produto-inner { width: 100%; flex-direction: column; }
+            .form-novo-produto-inner > div { width: 100%; }
             #controles-filtros-globais { flex-direction: column; align-items: stretch; } #controles-filtros-globais button { width: 100%; margin-right: 0; margin-bottom: 10px;}
             .controles-acoes-gerais { flex-direction: column; align-items: stretch;}
             .controles-acoes-gerais button { width: auto; }
@@ -261,13 +266,17 @@
 
         <div class="control-group control-group-add">
             <div class="form-novo-produto-inner">
-                 <div>
+                 <div class="div-novo-produto-nome">
                      <label for="novo-produto-nome">
                          <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8.5 6.034V4.5a.5.5 0 0 0-1 0V6.034a.5.5 0 0 0 .002.048l.003.03a.5.5 0 0 0 .01.044l.014.048a.514.514 0 0 0 .02.046l.029.055a.5.5 0 0 0 .035.053l.041.053a.5.5 0 0 0 .048.048l.053.041a.5.5 0 0 0 .053.035l.055.029a.514.514 0 0 0 .046.02l.048.014a.5.5 0 0 0 .044.01l.03.003a.5.5 0 0 0 .048.002H8.5zm-.004 1.03.003.03a.5.5 0 0 0 .01.044l.014.048a.514.514 0 0 0 .02.046l.029.055a.5.5 0 0 0 .035.053l.041.053a.5.5 0 0 0 .048.048l.053.041a.5.5 0 0 0 .053.035l.055.029a.514.514 0 0 0 .046.02l.048.014a.5.5 0 0 0 .044.01l.03.003a.5.5 0 0 0 .048.002h.002a.5.5 0 0 0 .048-.002l.03-.003a.5.5 0 0 0 .044-.01l.048-.014a.514.514 0 0 0 .046-.02l.055-.029a.5.5 0 0 0 .053-.035l.053-.041a.5.5 0 0 0 .048-.048l.041-.053a.5.5 0 0 0 .035-.053l.029-.055a.514.514 0 0 0 .02-.046l.014-.048a.5.5 0 0 0 .01-.044l.003-.03a.5.5 0 0 0 .002-.048V8.5a.5.5 0 0 0-1 0v.034a.5.5 0 0 0 .002.048zM16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8 5a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 5"/></svg>
                          Novo Item:
                     </label>
                     <input type="text" id="novo-produto-nome" placeholder="Nome do produto">
                 </div>
+                 <div>
+                     <label for="novo-produto-preco">Preço (R$):</label>
+                     <input type="number" step="0.01" id="novo-produto-preco" placeholder="0,00" inputmode="decimal">
+                 </div>
                 <div>
                     <label for="novo-produto-categoria">Categoria:</label>
                     <select id="novo-produto-categoria"></select>
@@ -369,6 +378,7 @@
             const categoriasContainer = document.getElementById('categorias-container');
             const filtroInput = document.getElementById('filtro-nome');
             const novoProdutoNomeInput = document.getElementById('novo-produto-nome');
+            const novoProdutoPrecoInput = document.getElementById('novo-produto-preco');
             const novoProdutoCategoriaSelect = document.getElementById('novo-produto-categoria');
             const addProdutoBtn = document.getElementById('btn-add-produto');
             const totalGeralDisplay = document.getElementById('total-geral');
@@ -408,9 +418,9 @@
             let orcamentoTotal = null;
             let controlesFinaisVisible = true;
 
-            const KEY_STORAGE_ATIVA = 'listaComprasAtiva_v4.11.5';
-            const KEY_STORAGE_ARQUIVOS = 'listaComprasArquivadas_v4.11.5';
-            const KEY_STORAGE_CONTROLES_FINAIS_VISIBLE = 'listaComprasControlesFinaisVisible_v4.11.5';
+            const KEY_STORAGE_ATIVA = 'listaComprasAtiva_v4.11.6';
+            const KEY_STORAGE_ARQUIVOS = 'listaComprasArquivadas_v4.11.6';
+            const KEY_STORAGE_CONTROLES_FINAIS_VISIBLE = 'listaComprasControlesFinaisVisible_v4.11.6';
 
             const DEFAULT_COLORS = ['#27ae60', '#2980b9', '#e67e22', '#8e44ad', '#f39c12', '#7f8c8d', '#1abc9c', '#c0392b', '#d35400', '#34495e', '#f1c40f', '#95a5a6', '#2c3e50', '#3498db', '#e74c3c', '#9b59b6'];
 
@@ -420,6 +430,7 @@
              const normalizarTexto = (t = '') => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
              const gerarIdCategoria = (n) => `nova-${normalizarTexto(n).replace(/[^a-z0-9-]/g, '').replace(/\s+/g, '-')}-${gerarIdUnico()}`;
              const parseMoeda = (str) => { if (!str) return 0; try { const numericString = String(str).replace(/R\$\s?/g, '').replace(/\./g, '').replace(',', '.'); const number = parseFloat(numericString); return isNaN(number) ? 0 : number; } catch (e) { console.error("Erro ao parsear moeda:", str, e); return 0; } };
+             const getDataAtualFormatada = () => new Date().toISOString().slice(0, 10);
 
              const calcularTotalItem = (itemEl) => { const qtd = parseFloat(itemEl.querySelector('.input-qtd')?.value) || 0; const preco = parseFloat(itemEl.querySelector('.input-preco')?.value) || 0; const totalDisplay = itemEl.querySelector('.item-total'); if (totalDisplay) totalDisplay.textContent = formatarMoeda(qtd * preco); };
              const calcularInfoCategoria = (catEl) => { if(!catEl) return; let totalMarcados = 0, countMarcados = 0; const catId = catEl.dataset.categoryId; const contagemSpan = catEl.querySelector(`#contagem-cat-${catId}`); const precoSpan = catEl.querySelector(`#preco-cat-${catId}`); const totalRodapeDisp = catEl.querySelector('.categoria-total'); const budgetInput = catEl.querySelector('.input-budget-categoria'); const budgetWarning = catEl.querySelector('.budget-warning'); catEl.querySelectorAll('.item-lista').forEach(itemEl => { if (!itemEl.classList.contains('hidden') && !itemEl.classList.contains('item-hidden-by-filter')) { calcularTotalItem(itemEl); if (!itemEl.classList.contains('item-already-have') && itemEl.querySelector('.item-check')?.checked) { countMarcados++; totalMarcados += (parseFloat(itemEl.querySelector('.input-qtd')?.value) || 0) * (parseFloat(itemEl.querySelector('.input-preco')?.value) || 0); } } else { calcularTotalItem(itemEl); } }); if (contagemSpan) contagemSpan.textContent = countMarcados; if (precoSpan) precoSpan.textContent = formatarMoeda(totalMarcados); if (totalRodapeDisp) totalRodapeDisp.textContent = `Total Selecionado: ${formatarMoeda(totalMarcados)}`; if (budgetInput && budgetWarning) { const budgetValue = parseFloat(budgetInput.value); if (!isNaN(budgetValue) && budgetValue > 0) budgetWarning.style.display = totalMarcados > budgetValue ? 'inline-flex' : 'none'; else budgetWarning.style.display = 'none'; } };
@@ -592,7 +603,7 @@
 
              const popularSelectCategorias = () => { const c = categoriasContainer.querySelectorAll('.categoria'); const valorAtual = novoProdutoCategoriaSelect.value; novoProdutoCategoriaSelect.innerHTML = ''; c.forEach(cat => { const o=document.createElement('option'); const n=cat.querySelector('.nome-categoria-display'); let t = n ? n.textContent.trim() : 'Cat s/ nome'; o.value = cat.dataset.categoryId; o.textContent = t || cat.dataset.categoryId; novoProdutoCategoriaSelect.appendChild(o); }); if (valorAtual && novoProdutoCategoriaSelect.querySelector(`option[value="${valorAtual}"]`)) { novoProdutoCategoriaSelect.value = valorAtual; } else if (novoProdutoCategoriaSelect.options.length > 0) { novoProdutoCategoriaSelect.selectedIndex = 0;} };
              const inicializarApp = () => {
-                 console.log("Inicializando App v4.11.5 - Toggle Categoria Header");
+                 console.log("Inicializando App v4.11.6 - Adicionar Preço/Data");
                  carregarArquivos();
                  if (!carregarDadosAtivos()) {
                     console.log("Nenhuma lista ativa. Inicializando padrão.");
@@ -611,6 +622,7 @@
                  } else {
                     console.log("Lista ativa carregada.");
                  }
+                 if (!dataCompraInput.value) { dataCompraInput.value = getDataAtualFormatada(); }
                  popularSelectCategorias();
                  _updateAllItemCategorySelects();
 
@@ -627,7 +639,47 @@
                  }
                  atualizarVisibilidadeControlesFinaisUI();
 
-                 addProdutoBtn.addEventListener('click', () => { const nomeNovo = novoProdutoNomeInput.value.trim(); const catId = novoProdutoCategoriaSelect.value; if (!nomeNovo || !catId) { alert('Preencha nome e selecione uma categoria.'); return; } const nomeNovoNormalizado = normalizarTexto(nomeNovo); let itemExatoEncontrado = null; let itemSimilarEncontrado = null; const itensExistentes = Object.values(dadosLista); for (const itemExistente of itensExistentes) { const nomeExistenteNormalizado = normalizarTexto(itemExistente.nome); if (nomeExistenteNormalizado === nomeNovoNormalizado) { itemExatoEncontrado = itemExistente; break; } if (!itemExatoEncontrado) { const palavrasNovo = nomeNovoNormalizado.split(' '); const palavrasExistente = nomeExistenteNormalizado.split(' '); if (nomeNovoNormalizado.includes(nomeExistenteNormalizado) || nomeExistenteNormalizado.includes(nomeNovoNormalizado) || (palavrasNovo.length > 0 && palavrasExistente.length > 0 && palavrasNovo[0] === palavrasExistente[0])) { if (!itemSimilarEncontrado) itemSimilarEncontrado = itemExistente; } } } if (itemExatoEncontrado) { alert(`O item "${nomeNovo}" já existe na lista!`); return; } if (itemSimilarEncontrado) { const confirmar = confirm(`"${nomeNovo}" é parecido com um item existente ("${itemSimilarEncontrado.nome}"). Deseja adicionar mesmo assim?`); if (!confirmar) return; } const d = { id: gerarIdUnico(), nome: nomeNovo, checked: false, alreadyHave: false, qtd: '1.0', preco: '' }; adicionarItemNaCategoria(d, catId, `${catId}-geral`); novoProdutoNomeInput.value = ''; const catEl = categoriasContainer.querySelector(`.categoria[data-category-id="${catId}"]`); if (catEl) { calcularInfoCategoria(catEl); if (!catEl.classList.contains('expanded')) catEl.querySelector('.toggle-categoria')?.click(); } calcularTotalGeral(); salvarDadosAtivos(); });
+                 addProdutoBtn.addEventListener('click', () => {
+                     const nomeNovo = novoProdutoNomeInput.value.trim();
+                     const catId = novoProdutoCategoriaSelect.value;
+                     const precoNovoRaw = novoProdutoPrecoInput.value.trim();
+                     let precoNovoFormatado = '';
+
+                     if (!nomeNovo || !catId) { alert('Preencha nome e selecione uma categoria.'); return; }
+
+                     if (precoNovoRaw) {
+                         const numericString = precoNovoRaw.replace(',', '.');
+                         const parsedValue = parseFloat(numericString);
+                         if (!isNaN(parsedValue)) {
+                             precoNovoFormatado = parsedValue.toFixed(2);
+                         } else {
+                             alert("Preço inválido. Deixe em branco ou insira um número.");
+                             return;
+                         }
+                     }
+
+                     const nomeNovoNormalizado = normalizarTexto(nomeNovo);
+                     let itemExatoEncontrado = null;
+                     let itemSimilarEncontrado = null;
+                     const itensExistentes = Object.values(dadosLista);
+                     for (const itemExistente of itensExistentes) { const nomeExistenteNormalizado = normalizarTexto(itemExistente.nome); if (nomeExistenteNormalizado === nomeNovoNormalizado) { itemExatoEncontrado = itemExistente; break; } if (!itemExatoEncontrado) { const palavrasNovo = nomeNovoNormalizado.split(' '); const palavrasExistente = nomeExistenteNormalizado.split(' '); if (nomeNovoNormalizado.includes(nomeExistenteNormalizado) || nomeExistenteNormalizado.includes(nomeNovoNormalizado) || (palavrasNovo.length > 0 && palavrasExistente.length > 0 && palavrasNovo[0] === palavrasExistente[0])) { if (!itemSimilarEncontrado) itemSimilarEncontrado = itemExistente; } } }
+                     if (itemExatoEncontrado) { alert(`O item "${nomeNovo}" já existe na lista!`); return; }
+                     if (itemSimilarEncontrado) { const confirmar = confirm(`"${nomeNovo}" é parecido com um item existente ("${itemSimilarEncontrado.nome}"). Deseja adicionar mesmo assim?`); if (!confirmar) return; }
+
+                     const dataAdicao = getDataAtualFormatada();
+                     const d = { id: gerarIdUnico(), nome: nomeNovo, checked: false, alreadyHave: false, qtd: '1.0', preco: precoNovoFormatado, dataAdicao: dataAdicao };
+
+                     adicionarItemNaCategoria(d, catId, `${catId}-geral`);
+                     novoProdutoNomeInput.value = '';
+                     novoProdutoPrecoInput.value = '';
+
+                     if (!dataCompraInput.value) { dataCompraInput.value = dataAdicao; }
+
+                     const catEl = categoriasContainer.querySelector(`.categoria[data-category-id="${catId}"]`);
+                     if (catEl) { calcularInfoCategoria(catEl); if (!catEl.classList.contains('expanded')) catEl.querySelector('.toggle-categoria')?.click(); }
+                     calcularTotalGeral();
+                     salvarDadosAtivos();
+                 });
                  btnSalvarHistorico.addEventListener('click', salvarListaNoHistorico);
                  selectArquivos.addEventListener('change', handleSelecaoArquivoChange);
                  btnCarregarArquivo.addEventListener('click', carregarListaArquivada);
@@ -695,8 +747,8 @@
                  console.log("App inicializado e listeners configurados.");
              };
 
-             const handleImportarArquivo = (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { const content = e.target.result; let importedData; let itensImportados = 0; let itensIgnorados = 0; try { importedData = JSON.parse(content); } catch (error) { console.error("Erro ao parsear JSON:", error); alert("Erro ao ler o arquivo. Verifique se é um arquivo JSON válido."); event.target.value = null; return; } if (!Array.isArray(importedData)) { if(typeof importedData === 'object' && importedData !== null && importedData.itens) { alert("Erro: Este parece ser um arquivo de exportação completo. Use a função de 'Carregar' do histórico ou importe um arquivo JSON contendo apenas uma lista simples de itens (array de objetos com nome, preco, qtd, categoriaId)."); } else { alert("Erro: O arquivo JSON deve conter um array (lista) de itens."); } event.target.value = null; return; } if (!confirm(`Importar ${importedData.length} itens deste arquivo JSON? Itens com nomes EXATAMENTE iguais aos existentes serão ignorados.`)) { event.target.value = null; return; } let defaultCategoryId = novoProdutoCategoriaSelect.value; if (!categoriasDefinidas.some(c => c.id === defaultCategoryId)) { const primeiraCategoria = categoriasContainer.querySelector('.categoria'); if (primeiraCategoria) defaultCategoryId = primeiraCategoria.dataset.categoryId; else { _criarEstruturasPadrao(); popularSelectCategorias(); defaultCategoryId = categoriasDefinidas.length > 0 ? categoriasDefinidas[0].id : null; if (!defaultCategoryId) { alert("Erro crítico: Nenhuma categoria encontrada ou criada para importar os itens."); event.target.value = null; return; } alert("Nenhuma categoria existia. Categorias padrão foram criadas."); } } importedData.forEach(item => { if (!item || typeof item.nome !== 'string' || item.nome.trim() === '') { console.warn("Item inválido ou sem nome no JSON, ignorando:", item); itensIgnorados++; return; } const nomeImportado = item.nome.trim(); const nomeNormalizadoImportado = normalizarTexto(nomeImportado); const itemJaExiste = Object.values(dadosLista).some(itemExistente => normalizarTexto(itemExistente.nome) === nomeNormalizadoImportado); if (itemJaExiste) { console.log(`Item "${nomeImportado}" já existe, ignorando.`); itensIgnorados++; return; } let targetCategoryId = item.categoriaId; if (!targetCategoryId || !categoriasDefinidas.some(c => c.id === targetCategoryId)) { console.warn(`Categoria "${targetCategoryId || 'N/A'}" do item "${nomeImportado}" não encontrada. Usando default: "${defaultCategoryId}".`); targetCategoryId = defaultCategoryId; } const novoItemData = { id: gerarIdUnico(), nome: nomeImportado, checked: false, alreadyHave: false, qtd: String(item.qtd || '1.0'), preco: String(item.preco || ''), categoriaId: targetCategoryId, subcategoriaId: `${targetCategoryId}-geral` }; dadosLista[novoItemData.id] = novoItemData; adicionarItemNaCategoria(novoItemData, targetCategoryId); itensImportados++; }); if (itensImportados > 0) { popularSelectCategorias(); _updateAllItemCategorySelects(); categoriasContainer.querySelectorAll('.categoria').forEach(calcularInfoCategoria); categoriasContainer.querySelectorAll('.categoria').forEach(updateCategoryToggleButtonState); calcularTotalGeral(); aplicarFiltrosVisibilidadeItens(); salvarDadosAtivos(); } alert(`${itensImportados} itens importados com sucesso.\n${itensIgnorados} itens inválidos ou duplicados (nome exato) foram ignorados.`); }; reader.onerror = (e) => { console.error("Erro ao ler arquivo:", e); alert("Erro ao ler o arquivo."); }; reader.readAsText(file); event.target.value = null; };
-             const popularListaInicial = () => { dadosLista = {}; const itensIniciais = [ { nome: 'Banana Prata (kg)', preco: '9.90', cid: 'feira-semanal' }, { nome: 'Laranja Pera (kg)', preco: '5.90', cid: 'feira-semanal' }, { nome: 'Maçã Gala (kg)', preco: '12.50', cid: 'feira-semanal' }, { nome: 'Mamão Formosa (un)', preco: '8.00', cid: 'feira-semanal' }, { nome: 'Alface Crespa (un)', preco: '3.50', cid: 'feira-semanal' }, { nome: 'Tomate Italiano (kg)', preco: '10.80', cid: 'feira-semanal' }, { nome: 'Cebola (kg)', preco: '7.00', cid: 'feira-semanal' }, { nome: 'Batata Inglesa (kg)', preco: '6.00', cid: 'feira-semanal' }, { nome: 'Alho (a granel kg)', preco: '29.90', cid: 'feira-semanal', qtd: '0.2' }, { nome: 'Arroz Agulhinha 5kg', preco: '24.99', cid: 'feira-mensal' }, { nome: 'Feijão Carioca 1kg', preco: '8.99', cid: 'feira-mensal' }, { nome: 'Óleo de Soja 900ml', preco: '5.99', cid: 'feira-mensal' }, { nome: 'Sal Refinado 1kg', preco: '1.99', cid: 'feira-mensal' }, { nome: 'Açúcar Cristal 1kg', preco: '4.49', cid: 'feira-mensal' }, { nome: 'Café Melitta 500g', preco: '16.90', cid: 'feira-mensal' }, { nome: 'Leite Longa Vida (L)', preco: '4.80', cid: 'feira-mensal', qtd: '6.0' }, { nome: 'Macarrão Espaguete 500g', preco: '3.80', cid: 'feira-mensal' }, { nome: 'Sabão em Pó Omo 1.6kg', preco: '25.50', cid: 'limpeza'}, { nome: 'Detergente Ypê Clear 500ml', preco: '2.20', cid: 'limpeza'}, { nome: 'Água Sanitária Qboa 1L', preco: '3.50', cid: 'limpeza'}, { nome: 'Desinfetante Pinho Sol 500ml', preco: '7.80', cid: 'limpeza'}, { nome: 'Esponja Multiuso (pacote)', preco: '4.00', cid: 'limpeza'}, { nome: 'Shampoo Pantene 400ml', preco: '18.90', cid: 'higiene'}, { nome: 'Condicionador Pantene 170ml', preco: '12.90', cid: 'higiene'}, { nome: 'Sabonete Dove Original', preco: '3.50', cid: 'higiene', qtd: '4.0'}, { nome: 'Pasta de Dente Colgate Total 12 90g', preco: '6.50', cid: 'higiene'}, { nome: 'Papel Higiênico Neve (4 rolos)', preco: '8.90', cid: 'higiene'}, { nome: 'Azeite Extra Virgem Gallo 500ml', preco: '32.00', cid: 'condimentos'}, { nome: 'Vinagre de Álcool 750ml', preco: '2.50', cid: 'condimentos'}, { nome: 'Molho de Tomate Heinz Tradicional 300g', preco: '3.20', cid: 'condimentos'}, { nome: 'Maionese Hellmanns 500g', preco: '10.50', cid: 'condimentos'}, { nome: 'Papel Toalha Kitchen (2 rolos)', preco: '6.00', cid: 'outros'}, { nome: 'Filtro de Café Melitta 103 (30 un)', preco: '5.50', cid: 'outros'}, { nome: 'Pano de Chão (un)', preco: '4.00', cid: 'outros'}, ]; itensIniciais.forEach(i => { const d = { id: gerarIdUnico(), nome: i.nome, checked: false, alreadyHave: false, qtd: i.qtd || '1.0', preco: i.preco || '' }; adicionarItemNaCategoria(d, i.cid, `${i.cid}-geral`); }); };
+             const handleImportarArquivo = (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { const content = e.target.result; let importedData; let itensImportados = 0; let itensIgnorados = 0; try { importedData = JSON.parse(content); } catch (error) { console.error("Erro ao parsear JSON:", error); alert("Erro ao ler o arquivo. Verifique se é um arquivo JSON válido."); event.target.value = null; return; } if (!Array.isArray(importedData)) { if(typeof importedData === 'object' && importedData !== null && importedData.itens) { alert("Erro: Este parece ser um arquivo de exportação completo. Use a função de 'Carregar' do histórico ou importe um arquivo JSON contendo apenas uma lista simples de itens (array de objetos com nome, preco, qtd, categoriaId)."); } else { alert("Erro: O arquivo JSON deve conter um array (lista) de itens."); } event.target.value = null; return; } if (!confirm(`Importar ${importedData.length} itens deste arquivo JSON? Itens com nomes EXATAMENTE iguais aos existentes serão ignorados.`)) { event.target.value = null; return; } let defaultCategoryId = novoProdutoCategoriaSelect.value; if (!categoriasDefinidas.some(c => c.id === defaultCategoryId)) { const primeiraCategoria = categoriasContainer.querySelector('.categoria'); if (primeiraCategoria) defaultCategoryId = primeiraCategoria.dataset.categoryId; else { _criarEstruturasPadrao(); popularSelectCategorias(); defaultCategoryId = categoriasDefinidas.length > 0 ? categoriasDefinidas[0].id : null; if (!defaultCategoryId) { alert("Erro crítico: Nenhuma categoria encontrada ou criada para importar os itens."); event.target.value = null; return; } alert("Nenhuma categoria existia. Categorias padrão foram criadas."); } } importedData.forEach(item => { if (!item || typeof item.nome !== 'string' || item.nome.trim() === '') { console.warn("Item inválido ou sem nome no JSON, ignorando:", item); itensIgnorados++; return; } const nomeImportado = item.nome.trim(); const nomeNormalizadoImportado = normalizarTexto(nomeImportado); const itemJaExiste = Object.values(dadosLista).some(itemExistente => normalizarTexto(itemExistente.nome) === nomeNormalizadoImportado); if (itemJaExiste) { console.log(`Item "${nomeImportado}" já existe, ignorando.`); itensIgnorados++; return; } let targetCategoryId = item.categoriaId; if (!targetCategoryId || !categoriasDefinidas.some(c => c.id === targetCategoryId)) { console.warn(`Categoria "${targetCategoryId || 'N/A'}" do item "${nomeImportado}" não encontrada. Usando default: "${defaultCategoryId}".`); targetCategoryId = defaultCategoryId; } const novoItemData = { id: gerarIdUnico(), nome: nomeImportado, checked: false, alreadyHave: false, qtd: String(item.qtd || '1.0'), preco: String(item.preco || ''), dataAdicao: getDataAtualFormatada(), categoriaId: targetCategoryId, subcategoriaId: `${targetCategoryId}-geral` }; dadosLista[novoItemData.id] = novoItemData; adicionarItemNaCategoria(novoItemData, targetCategoryId); itensImportados++; }); if (itensImportados > 0) { popularSelectCategorias(); _updateAllItemCategorySelects(); categoriasContainer.querySelectorAll('.categoria').forEach(calcularInfoCategoria); categoriasContainer.querySelectorAll('.categoria').forEach(updateCategoryToggleButtonState); calcularTotalGeral(); aplicarFiltrosVisibilidadeItens(); salvarDadosAtivos(); } alert(`${itensImportados} itens importados com sucesso.\n${itensIgnorados} itens inválidos ou duplicados (nome exato) foram ignorados.`); }; reader.onerror = (e) => { console.error("Erro ao ler arquivo:", e); alert("Erro ao ler o arquivo."); }; reader.readAsText(file); event.target.value = null; };
+             const popularListaInicial = () => { dadosLista = {}; const hoje = getDataAtualFormatada(); const itensIniciais = [ { nome: 'Banana Prata (kg)', preco: '9.90', cid: 'feira-semanal' }, { nome: 'Laranja Pera (kg)', preco: '5.90', cid: 'feira-semanal' }, { nome: 'Maçã Gala (kg)', preco: '12.50', cid: 'feira-semanal' }, { nome: 'Mamão Formosa (un)', preco: '8.00', cid: 'feira-semanal' }, { nome: 'Alface Crespa (un)', preco: '3.50', cid: 'feira-semanal' }, { nome: 'Tomate Italiano (kg)', preco: '10.80', cid: 'feira-semanal' }, { nome: 'Cebola (kg)', preco: '7.00', cid: 'feira-semanal' }, { nome: 'Batata Inglesa (kg)', preco: '6.00', cid: 'feira-semanal' }, { nome: 'Alho (a granel kg)', preco: '29.90', cid: 'feira-semanal', qtd: '0.2' }, { nome: 'Arroz Agulhinha 5kg', preco: '24.99', cid: 'feira-mensal' }, { nome: 'Feijão Carioca 1kg', preco: '8.99', cid: 'feira-mensal' }, { nome: 'Óleo de Soja 900ml', preco: '5.99', cid: 'feira-mensal' }, { nome: 'Sal Refinado 1kg', preco: '1.99', cid: 'feira-mensal' }, { nome: 'Açúcar Cristal 1kg', preco: '4.49', cid: 'feira-mensal' }, { nome: 'Café Melitta 500g', preco: '16.90', cid: 'feira-mensal' }, { nome: 'Leite Longa Vida (L)', preco: '4.80', cid: 'feira-mensal', qtd: '6.0' }, { nome: 'Macarrão Espaguete 500g', preco: '3.80', cid: 'feira-mensal' }, { nome: 'Sabão em Pó Omo 1.6kg', preco: '25.50', cid: 'limpeza'}, { nome: 'Detergente Ypê Clear 500ml', preco: '2.20', cid: 'limpeza'}, { nome: 'Água Sanitária Qboa 1L', preco: '3.50', cid: 'limpeza'}, { nome: 'Desinfetante Pinho Sol 500ml', preco: '7.80', cid: 'limpeza'}, { nome: 'Esponja Multiuso (pacote)', preco: '4.00', cid: 'limpeza'}, { nome: 'Shampoo Pantene 400ml', preco: '18.90', cid: 'higiene'}, { nome: 'Condicionador Pantene 170ml', preco: '12.90', cid: 'higiene'}, { nome: 'Sabonete Dove Original', preco: '3.50', cid: 'higiene', qtd: '4.0'}, { nome: 'Pasta de Dente Colgate Total 12 90g', preco: '6.50', cid: 'higiene'}, { nome: 'Papel Higiênico Neve (4 rolos)', preco: '8.90', cid: 'higiene'}, { nome: 'Azeite Extra Virgem Gallo 500ml', preco: '32.00', cid: 'condimentos'}, { nome: 'Vinagre de Álcool 750ml', preco: '2.50', cid: 'condimentos'}, { nome: 'Molho de Tomate Heinz Tradicional 300g', preco: '3.20', cid: 'condimentos'}, { nome: 'Maionese Hellmanns 500g', preco: '10.50', cid: 'condimentos'}, { nome: 'Papel Toalha Kitchen (2 rolos)', preco: '6.00', cid: 'outros'}, { nome: 'Filtro de Café Melitta 103 (30 un)', preco: '5.50', cid: 'outros'}, { nome: 'Pano de Chão (un)', preco: '4.00', cid: 'outros'}, ]; itensIniciais.forEach(i => { const d = { id: gerarIdUnico(), nome: i.nome, checked: false, alreadyHave: false, qtd: i.qtd || '1.0', preco: i.preco || '', dataAdicao: hoje }; adicionarItemNaCategoria(d, i.cid, `${i.cid}-geral`); }); };
 
              inicializarApp();
 
@@ -705,3 +757,4 @@
 
  </body>
  </html>
+Type something
