@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Compras v4.11.6 - Adicionar Preço/Data</title>
+    <title>Lista de Compras v4.11.11 - Ações no Histórico</title>
     <meta name="theme-color" content="#4CAF50"/>
     <link rel="apple-touch-icon" href="icon-192x192.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,11 +38,12 @@
         #btn-toggle-unselected { background-color: #28a745; }
         #btn-toggle-already-have { background-color: #17a2b8; }
         #btn-recolher-abas { background-color: #ffc107; color: #212529; }
+        #btn-toggle-historico { background-color: #6c757d; }
         #btn-zerar-listas { background-color: #dc3545; }
         #btn-zerar-listas svg { width: 1em; height: 1em;}
 
-        h2.toggle-categoria { margin: 0; padding: 10px 15px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; cursor: pointer; transition: filter 0.2s ease; font-size: 1.1em; color: white; border-radius: 8px 8px 0 0; }
-        h2.toggle-categoria:hover:not(.header-content-hidden) { filter: brightness(90%); }
+        h2.toggle-categoria, h2.toggle-historico-compras { margin: 0; padding: 10px 15px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; cursor: pointer; transition: filter 0.2s ease; font-size: 1.1em; color: white; border-radius: 8px 8px 0 0; }
+        h2.toggle-categoria:hover:not(.header-content-hidden), h2.toggle-historico-compras:hover { filter: brightness(90%); }
         h2 .drag-handle { cursor: grab; margin-right: 8px; opacity: 0.7; font-size: 1.1em; line-height: 1; flex-shrink: 0; user-select: none; -webkit-user-select: none; order: 0;}
         h2 .drag-handle:active { cursor: grabbing; }
         h2 .emoji { font-size: 1.2em; margin-right: 5px; order: 1; line-height: 1;}
@@ -71,7 +73,7 @@
         .btn-toggle-header-content:hover { color: #fff; transform: scale(1.1); }
 
         .toggle-indicator { font-size: 1.2em; font-weight: bold; transition: transform 0.3s ease; margin-left: 10px; color: white; order: 6; flex-shrink: 0; }
-        .categoria.expanded .toggle-indicator { transform: rotate(180deg); }
+        .categoria.expanded .toggle-indicator, #historico-compras-container.expanded .toggle-indicator { transform: rotate(180deg); }
 
         h2.header-content-hidden .titulo-categoria,
         h2.header-content-hidden .cabecalho-acoes,
@@ -102,7 +104,9 @@
         #import-file-input { display: none; }
         .controles-finais-hidden { display: none; }
 
-        .categoria { background-color: #ffffff; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #dee2e6; overflow: hidden; transition: transform 0.2s ease-out, box-shadow 0.2s ease-out; }
+        .categoria, #historico-compras-container { background-color: #ffffff; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #dee2e6; overflow: hidden; transition: transform 0.2s ease-out, box-shadow 0.2s ease-out; }
+        #historico-compras-container { border-color: #adb5bd; }
+        #historico-compras-container h2 { background-color: #6c757d; }
         .categoria[data-category-id="feira-semanal"] h2 { background-color: #27ae60; }
         .categoria[data-category-id="feira-mensal"] h2 { background-color: #2980b9; }
         .categoria[data-category-id="limpeza"] h2 { background-color: #e67e22; }
@@ -111,7 +115,7 @@
         .categoria[data-category-id="outros"] h2 { background-color: #7f8c8d; }
         .categoria[data-category-id^="nova-"] h2 { background-color: #1abc9c; }
         .categoria-conteudo { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s ease-out; padding: 0 15px; }
-        .categoria.expanded .categoria-conteudo { max-height: 3000px; padding: 10px 15px 15px 15px; }
+        .categoria.expanded .categoria-conteudo, #historico-compras-container.expanded .categoria-conteudo { max-height: 3000px; padding: 10px 15px 15px 15px; }
         .ordenacao-controles-categoria { padding-left: 0; margin-bottom: 15px; display: flex; gap: 8px; flex-wrap: wrap; }
         .ordenacao-controles-categoria button { font-size: 0.8em; padding: 4px 8px; background-color: #f8f9fa; color: #495057; border: 1px solid #dee2e6; }
         .ordenacao-controles-categoria button:hover { background-color: #e9ecef; border-color: #ced4da; }
@@ -121,7 +125,7 @@
         .item-lista { display: flex; flex-direction: column; padding: 10px 0; border-bottom: 1px solid #e9ecef; transition: opacity 0.3s ease, max-height 0.3s ease, background-color 0.3s ease; overflow: hidden; }
         .lista-itens .item-lista:last-child { border-bottom: none; }
         .item-lista.hidden, .item-lista.item-hidden-by-filter { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; border-bottom: none; margin-bottom: -1px; overflow: hidden; }
-        .item-linha-1 { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 8px; }
+        .item-linha-1 { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 8px; flex-wrap: wrap; gap: 5px;}
         .item-principal { display: flex; align-items: center; flex-grow: 1; }
         .item-already-have-check { margin-right: 8px; cursor: pointer; width: 18px; height: 18px; flex-shrink: 0; accent-color: #6c757d; }
         .item-check { margin-right: 10px; cursor: pointer; width: 20px; height: 20px; flex-shrink: 0; accent-color: #007bff; }
@@ -133,6 +137,9 @@
         .item-move-cat { margin-left: auto; margin-right: 5px; flex-shrink: 0; }
         .item-categoria-select { font-size: 0.8em; padding: 2px 4px; border-radius: 3px; border: 1px solid #ced4da; background-color: #f8f9fa; max-width: 120px; cursor: pointer; }
         .item-categoria-select:hover { border-color: #adb5bd; }
+        .item-actions { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+        .btn-comprar-item { background-color: #28a745; color: white; font-size: 0.85em; cursor: pointer; padding: 3px 8px; border: none; border-radius: 3px; line-height: 1; }
+        .btn-comprar-item:hover { background-color: #218838; }
         .btn-remover-item { background: none; border: none; color: #dc3545; font-size: 1.3em; cursor: pointer; padding: 0 5px; margin-left: 0px; line-height: 1; flex-shrink: 0; }
         .btn-remover-item:hover { color: #a02532; }
         .item-detalhes { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-left: 46px; width: 100%; }
@@ -143,7 +150,30 @@
         .item-detalhes input.input-preco::-webkit-outer-spin-button, .item-detalhes input.input-preco::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .item-total { font-weight: 600; color: #212529; margin-left: auto; font-size: 0.95em; white-space: nowrap; align-self: center; }
 
+        .item-status-lights { display: inline-flex; gap: 4px; margin-left: 8px; vertical-align: middle; }
+        .status-light { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .status-light-red { background-color: #dc3545; }
+        .status-light-yellow { background-color: #ffc107; }
+        .status-light-green { background-color: #28a745; }
+        .status-light-blue { background-color: #0d6efd; }
+
         .categoria-total { text-align: right; margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ced4da; font-weight: bold; font-size: 1.1em; color: #0056b3; }
+        #lista-historico-compras .item-lista { background-color: #f1f3f5; border-bottom-color: #dee2e6; }
+        #lista-historico-compras .item-lista:last-child { border-bottom: none; }
+        .item-comprado > div { display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; margin-bottom: 5px; }
+        .item-comprado > div:last-child { margin-bottom: 0; }
+        .item-comprado .item-comprado-info { font-size: 0.9em; color: #495057; flex-grow: 1;}
+        .item-comprado .item-comprado-valor { font-weight: bold; font-size: 0.95em; }
+        .item-comprado .item-comprado-timestamp { font-size: 0.8em; color: #6c757d; padding-left: 10px; flex-shrink: 0;}
+        .item-comprado .item-status-lights { margin-right: 10px; flex-shrink: 0;}
+        .item-comprado-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-left: auto; }
+        .btn-delete-history-item { background: none; border: none; color: #dc3545; font-size: 1.1em; cursor: pointer; padding: 0 3px; line-height: 1; }
+        .btn-delete-history-item:hover { color: #a02532; }
+        .btn-readd-item { padding: 2px 6px; font-size: 0.8em; cursor: pointer; background-color: #17a2b8; color: white; border: none; border-radius: 3px; }
+        .btn-readd-item:hover { background-color: #117a8b; }
+        .btn-readd-item i { margin-right: 3px; }
+
+
         #total-geral { margin-top: 25px; padding: 15px; background-color: #2c3e50; color: white; text-align: center; font-size: 1.3em; font-weight: bold; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; transition: background-color 0.3s ease; }
         #total-geral > span { white-space: nowrap; }
         #contador-produtos-selecionados { font-weight: bold; color: #ffc107; }
@@ -156,7 +186,7 @@
         #total-geral.orcamento-excedido { background-color: #c0392b; border: 2px solid #ffdddd; }
         #total-geral.orcamento-excedido #valor-total-geral { color: #ffc107; font-weight: bolder; }
 
-        #categorias-container + .controles-acoes-gerais { margin-top: 10px; }
+        #categorias-container + #historico-compras-container + .controles-acoes-gerais { margin-top: 10px; }
 
         .categoria.dragging { visibility: hidden; border: 2px dashed #007bff !important; box-shadow: none; }
         .drag-over { border-top: 3px solid #0056b3 !important; }
@@ -177,11 +207,11 @@
             #controles-principais button { width: auto; flex-shrink: 0; }
             #controles-filtros-globais { justify-content: flex-start; }
             .item-lista { flex-direction: row; align-items: center; }
-            .item-linha-1 { margin-bottom: 0; flex-grow: 1; }
+            .item-linha-1 { margin-bottom: 0; flex-grow: 1; flex-wrap: nowrap; }
             .item-principal { flex-grow: 1; }
             .item-detalhes { padding-left: 15px; width: auto; flex-wrap: nowrap; flex-shrink: 0; }
             .item-total { min-width: 80px; }
-            h2.toggle-categoria { flex-wrap: nowrap; }
+            h2.toggle-categoria, h2.toggle-historico-compras { flex-wrap: nowrap; }
             .cabecalho-info { justify-content: flex-end; margin-left: 15px; order: 4; }
             .cabecalho-acoes { order: 3; flex-wrap: nowrap; }
             .titulo-categoria { order: 2; }
@@ -197,9 +227,13 @@
             .controles-finais label { text-align: left; margin-bottom: 0;}
             .item-move-cat { margin-left: 10px; }
             .item-categoria-select { max-width: 150px; }
+            .item-comprado > div { flex-wrap: nowrap; }
+            .item-comprado .item-comprado-info { flex-grow: 0; }
+            .item-comprado .item-comprado-timestamp { margin-left: 15px;}
+            .item-comprado-actions { margin-left: 15px; }
         }
          @media (max-width: 767px) {
-            h2.toggle-categoria { flex-wrap: wrap; padding-bottom: 8px; gap: 5px 10px; }
+            h2.toggle-categoria, h2.toggle-historico-compras { flex-wrap: wrap; padding-bottom: 8px; gap: 5px 10px; }
             .titulo-categoria { order: 2; width: calc(100% - 40px); margin-bottom: 5px; min-width: 0;}
             .emoji { order: 1;}
             .cabecalho-acoes { order: 3; margin-left: 0; margin-right: auto;}
@@ -235,6 +269,15 @@
              .orcamento-total-wrapper { border-right: none; padding-right: 0; justify-content: center; border-bottom: 1px solid rgba(255, 255, 255, 0.4); padding-bottom: 10px; margin-bottom: 5px; }
              #input-orcamento-total { width: 150px; }
              #total-geral > span:not(.orcamento-total-wrapper) { text-align: center; width: 100%; }
+             .item-linha-1 { flex-direction: column; align-items: flex-start; }
+             .item-move-cat { margin-left: 0; margin-top: 5px; width: 100%; }
+             .item-categoria-select { width: 100%; max-width: none; }
+             .item-actions { margin-left: auto; padding-left: 10px; align-self: flex-end; }
+             .item-comprado > div:first-child { flex-direction: column; align-items: flex-start; gap: 3px; }
+             .item-comprado .item-comprado-timestamp { margin-left: 0; padding-left: 0; width: 100%; }
+             .item-comprado > div:last-child { flex-direction: column; align-items: flex-start; gap: 3px; }
+             .item-comprado-actions { margin-left: 0; width: 100%; justify-content: flex-end; margin-top: 5px;}
+             .item-status-lights { margin-top: 4px; }
         }
     </style>
 </head>
@@ -294,6 +337,11 @@
              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-house-fill" viewBox="0 0 16 16"> <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293z"/> <path d="m8 3.293 6 6V13.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5V9.293z"/> </svg>
         </button>
         <button id="btn-recolher-abas" title="Fechar todas as categorias">Recolher Abas</button>
+        <button id="btn-toggle-historico" title="Mostrar/Ocultar Histórico de Compras">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock-history" viewBox="0 0 16 16">
+                <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022zm2.004.45a7 7 0 0 0-.985-.299l.219-.976q.576.129 1.126.342zm1.37.71a7 7 0 0 0-.439-.27l.493-.87a8 8 0 0 1 .979.654l-.615.789a7 7 0 0 0-.418-.302zm1.834 1.798a7 7 0 0 0-.653-.796l.724-.69q.406.429.747.91zm.744 1.352a7 7 0 0 0-.214-.468l.893-.45a8 8 0 0 1 .45 1.088l-.95.313a7 7 0 0 0-.179-.483m.53 2.507a7 7 0 0 0-.1-1.025l.985-.17q.1.58.116 1.17zm-.131 1.538q.05-.254.081-.51l.993.123a8 8 0 0 1-.23 1.155l-.964-.267q.069-.247.12-.506m-.939 1.255a7 7 0 0 0 .4-.504l.805.591a8 8 0 0 1-.97 1.025l-.606-.79q.278-.213.51-.45m-.964 1.205a7 7 0 0 0 .617-.489l.694.718a8 8 0 0 1-1.147.925l-.37-.93a7 7 0 0 0 .566-.346M8 1a7 7 0 1 0 4.95 11.95A7 7 0 0 0 8 1m7 7a8 8 0 1 1-16 0 8 8 0 0 1 16 0M9 5a.5.5 0 0 0-1 0v3.882l-1.447.724a.5.5 0 1 0 .5 1.732l1.947-1.168A.5.5 0 0 0 9 9.586z"/>
+            </svg>
+        </button>
         <button id="btn-zerar-listas" title="Excluir TODOS os itens de TODAS as categorias">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
               <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
@@ -308,6 +356,17 @@
 
      <div id="color-picker-popup">
      </div>
+
+    <section id="historico-compras-container" class="categoria" style="display: none;">
+        <h2 class="toggle-historico-compras">
+            <span class="emoji">🧾</span> Histórico de Compras Recentes
+            <span class="toggle-indicator">▼</span>
+        </h2>
+        <div class="categoria-conteudo">
+            <ul id="lista-historico-compras" class="lista-itens">
+            </ul>
+        </div>
+    </section>
 
     <div class="controles-acoes-gerais">
         <button id="btn-criar-categoria" title="Adicionar uma nova seção à lista"> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"> <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/> <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/> </svg> Criar Nova Categoria </button>
@@ -405,8 +464,13 @@
             const controlesFinaisDiv = document.querySelector('.controles-finais');
             const iconOlhoAbertoGlobal = document.getElementById('icon-olho-aberto');
             const iconOlhoFechadoGlobal = document.getElementById('icon-olho-fechado');
+            const historicoComprasContainer = document.getElementById('historico-compras-container');
+            const listaHistoricoCompras = document.getElementById('lista-historico-compras');
+            const btnToggleHistorico = document.getElementById('btn-toggle-historico');
+            const toggleHistoricoComprasHeader = document.querySelector('.toggle-historico-compras');
 
             let dadosLista = {};
+            let historicoCompras = [];
             let arquivos = {};
             let unselectedItemsVisible = true;
             let alreadyHaveItemsVisible = true;
@@ -417,12 +481,19 @@
             let currentPopupTargetType = null;
             let orcamentoTotal = null;
             let controlesFinaisVisible = true;
+            let historicoComprasVisivel = false;
+            let historicoComprasExpandido = false;
 
-            const KEY_STORAGE_ATIVA = 'listaComprasAtiva_v4.11.6';
-            const KEY_STORAGE_ARQUIVOS = 'listaComprasArquivadas_v4.11.6';
-            const KEY_STORAGE_CONTROLES_FINAIS_VISIBLE = 'listaComprasControlesFinaisVisible_v4.11.6';
+            const KEY_STORAGE_ATIVA = 'listaComprasAtiva_v4.11.11';
+            const KEY_STORAGE_ARQUIVOS = 'listaComprasArquivadas_v4.11.11';
+            const KEY_STORAGE_CONTROLES_FINAIS_VISIBLE = 'listaComprasControlesFinaisVisible_v4.11.11';
+            const KEY_STORAGE_HISTORICO_COMPRAS_CONFIG = 'listaComprasHistoricoConfig_v4.11.11';
 
             const DEFAULT_COLORS = ['#27ae60', '#2980b9', '#e67e22', '#8e44ad', '#f39c12', '#7f8c8d', '#1abc9c', '#c0392b', '#d35400', '#34495e', '#f1c40f', '#95a5a6', '#2c3e50', '#3498db', '#e74c3c', '#9b59b6'];
+            const HORA_MS = 60 * 60 * 1000;
+            const DIA_MS = 24 * HORA_MS;
+            const SEMANA_MS = 7 * DIA_MS;
+            const MES_MS = 30 * DIA_MS;
 
              const formatarMoeda = (v) => isNaN(Number(v)) ? 'R$ 0,00' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
              const gerarIdUnico = () => Date.now().toString(36) + Math.random().toString(36).slice(-6);
@@ -437,7 +508,76 @@
              const verificarOrcamentoTotal = () => { if (!totalGeralDisplay || !valorTotalGeralSpan) return; const totalGeralAtual = parseMoeda(valorTotalGeralSpan.textContent); let excedido = false; if (orcamentoTotal !== null && !isNaN(orcamentoTotal) && orcamentoTotal > 0) { if (totalGeralAtual > orcamentoTotal) excedido = true; } totalGeralDisplay.classList.toggle('orcamento-excedido', excedido); };
              const calcularTotalGeral = () => { let totalGeralValor = 0; let contadorItens = 0; Object.values(dadosLista).forEach(item => { const itemEl = categoriasContainer.querySelector(`.item-lista[data-item-id="${item.id}"]`); const isHiddenByFilter = itemEl && itemEl.classList.contains('item-hidden-by-filter'); const isHiddenBySearch = itemEl && itemEl.classList.contains('hidden'); if (item.checked && !item.alreadyHave && !isHiddenByFilter && !isHiddenBySearch) { totalGeralValor += (parseFloat(item.qtd) || 0) * (parseFloat(item.preco) || 0); contadorItens++; } }); if (contadorProdutosSpan) contadorProdutosSpan.textContent = contadorItens; if (valorTotalGeralSpan) valorTotalGeralSpan.textContent = formatarMoeda(totalGeralValor); verificarOrcamentoTotal(); };
 
-             const criarElementoItem = (itemData) => { const li = document.createElement('li'); li.className = 'item-lista'; if (itemData.alreadyHave) li.classList.add('item-already-have'); li.dataset.itemId = itemData.id; li.innerHTML = ` <div class="item-linha-1"> <div class="item-principal"> <input type="checkbox" id="alreadyhave-${itemData.id}" class="item-already-have-check" title="Marcar como 'Já Tenho'" ${itemData.alreadyHave ? 'checked' : ''}> <input type="checkbox" id="item-${itemData.id}" class="item-check" title="Marcar para Comprar" ${itemData.checked ? 'checked' : ''}> <label for="item-${itemData.id}" class="item-nome" title="Duplo clique para editar">${itemData.nome}</label> </div> <div class="item-move-cat"> <select class="item-categoria-select" title="Mover para..."></select> </div> <button class="btn-remover-item" title="Remover Item">×</button> </div> <div class="item-detalhes"> <label for="qtd-${itemData.id}">Qtd:</label> <div class="qtd-stepper"> <button type="button" class="btn-qtd-down" aria-label="Diminuir quantidade">-</button> <input type="number" step="0.1" placeholder="Qtd" class="input-qtd" id="qtd-${itemData.id}" value="${itemData.qtd || '1.0'}" inputmode="decimal"> <button type="button" class="btn-qtd-up" aria-label="Aumentar quantidade">+</button> </div> <label for="preco-${itemData.id}">Preço:</label> <input type="number" step="0.01" placeholder="0,00" class="input-preco" id="preco-${itemData.id}" value="${itemData.preco || ''}" inputmode="decimal"> <span class="item-total">R$ 0.00</span> </div>`; const nomeLabel = li.querySelector('.item-nome'); const precoInput = li.querySelector('.input-preco'); const categoriaSelect = li.querySelector('.item-categoria-select'); li.querySelector('.item-check').addEventListener('change', handleItemPurchaseChange); li.querySelector('.item-already-have-check').addEventListener('change', handleItemAlreadyHaveChange); precoInput.addEventListener('input', handleItemDetailsChange); precoInput.addEventListener('blur', handlePriceInputBlur); li.querySelector('.input-qtd').addEventListener('input', handleItemDetailsChange); li.querySelector('.btn-remover-item').addEventListener('click', handleRemoveItem); nomeLabel.addEventListener('dblclick', handleEditNameStart); nomeLabel.addEventListener('blur', handleEditNameEnd); nomeLabel.addEventListener('keydown', handleEditNameKeydown); categoriaSelect.addEventListener('change', handleMoveItemCategory); _populateSingleItemCategorySelect(categoriaSelect, itemData.categoriaId); calcularTotalItem(li); if(itemData.preco) handlePriceInputBlur({target: precoInput}); return li; };
+             const atualizarLuzesStatusItem = (itemEl, itemData) => {
+                 const lightsContainer = itemEl.querySelector('.item-status-lights');
+                 if (!lightsContainer) return;
+                 lightsContainer.innerHTML = '';
+
+                 if (itemData && itemData.dataReAdicao && typeof itemData.dataReAdicao === 'number' && itemData.dataReAdicao > 0) {
+                     const now = Date.now();
+                     const diffMs = now - itemData.dataReAdicao;
+                     let lightClass = '';
+                     let lightTitle = '';
+
+                     if (diffMs <= DIA_MS) {
+                         lightClass = 'status-light-red';
+                         lightTitle = 'Re-adicionado nas últimas 24 horas';
+                     } else if (diffMs <= DIA_MS * 2) {
+                         lightClass = 'status-light-yellow';
+                         lightTitle = 'Re-adicionado nos últimos 2 dias';
+                     } else if (diffMs <= SEMANA_MS) {
+                         lightClass = 'status-light-green';
+                         lightTitle = 'Re-adicionado na última semana';
+                     } else if (diffMs <= MES_MS) {
+                         lightClass = 'status-light-blue';
+                         lightTitle = 'Re-adicionado no último mês';
+                     }
+
+                     if (lightClass) {
+                         const lightSpan = document.createElement('span');
+                         lightSpan.className = `status-light ${lightClass}`;
+                         lightSpan.title = lightTitle;
+                         lightsContainer.appendChild(lightSpan);
+                     }
+                 }
+             };
+
+             const atualizarLuzesStatusHistorico = (itemEl, itemData) => {
+                 const lightsContainer = itemEl.querySelector('.item-status-lights');
+                 if (!lightsContainer) return;
+                 lightsContainer.innerHTML = '';
+
+                 if (itemData && itemData.dataHoraCompra && typeof itemData.dataHoraCompra === 'number' && itemData.dataHoraCompra > 0) {
+                     const now = Date.now();
+                     const diffMs = now - itemData.dataHoraCompra;
+                     let lightClass = '';
+                     let lightTitle = '';
+
+                     if (diffMs <= DIA_MS) {
+                         lightClass = 'status-light-red';
+                         lightTitle = 'Comprado nas últimas 24 horas';
+                     } else if (diffMs <= DIA_MS * 2) {
+                         lightClass = 'status-light-yellow';
+                         lightTitle = 'Comprado nos últimos 2 dias';
+                     } else if (diffMs <= SEMANA_MS) {
+                         lightClass = 'status-light-green';
+                         lightTitle = 'Comprado na última semana';
+                     } else if (diffMs <= MES_MS) {
+                         lightClass = 'status-light-blue';
+                         lightTitle = 'Comprado no último mês';
+                     }
+
+                     if (lightClass) {
+                         const lightSpan = document.createElement('span');
+                         lightSpan.className = `status-light ${lightClass}`;
+                         lightSpan.title = lightTitle;
+                         lightsContainer.appendChild(lightSpan);
+                     }
+                 }
+             };
+
+
+             const criarElementoItem = (itemData) => { const li = document.createElement('li'); li.className = 'item-lista'; if (itemData.alreadyHave) li.classList.add('item-already-have'); li.dataset.itemId = itemData.id; li.innerHTML = ` <div class="item-linha-1"> <div class="item-principal"> <input type="checkbox" id="alreadyhave-${itemData.id}" class="item-already-have-check" title="Marcar como 'Já Tenho'" ${itemData.alreadyHave ? 'checked' : ''}> <input type="checkbox" id="item-${itemData.id}" class="item-check" title="Marcar para Comprar" ${itemData.checked ? 'checked' : ''}> <label for="item-${itemData.id}" class="item-nome" title="Duplo clique para editar">${itemData.nome}</label> <span class="item-status-lights"></span> </div> <div class="item-actions"> <button class="btn-comprar-item" title="Marcar como Comprado">Comprado</button> <button class="btn-remover-item" title="Remover Item">×</button> </div> <div class="item-move-cat"> <select class="item-categoria-select" title="Mover para..."></select> </div> </div> <div class="item-detalhes"> <label for="qtd-${itemData.id}">Qtd:</label> <div class="qtd-stepper"> <button type="button" class="btn-qtd-down" aria-label="Diminuir quantidade">-</button> <input type="number" step="0.1" placeholder="Qtd" class="input-qtd" id="qtd-${itemData.id}" value="${itemData.qtd || '1.0'}" inputmode="decimal"> <button type="button" class="btn-qtd-up" aria-label="Aumentar quantidade">+</button> </div> <label for="preco-${itemData.id}">Preço:</label> <input type="number" step="0.01" placeholder="0,00" class="input-preco" id="preco-${itemData.id}" value="${itemData.preco || ''}" inputmode="decimal"> <span class="item-total">R$ 0.00</span> </div>`; const nomeLabel = li.querySelector('.item-nome'); const precoInput = li.querySelector('.input-preco'); const categoriaSelect = li.querySelector('.item-categoria-select'); li.querySelector('.item-check').addEventListener('change', handleItemPurchaseChange); li.querySelector('.item-already-have-check').addEventListener('change', handleItemAlreadyHaveChange); precoInput.addEventListener('input', handleItemDetailsChange); precoInput.addEventListener('blur', handlePriceInputBlur); li.querySelector('.input-qtd').addEventListener('input', handleItemDetailsChange); li.querySelector('.btn-remover-item').addEventListener('click', handleRemoveItem); nomeLabel.addEventListener('dblclick', handleEditNameStart); nomeLabel.addEventListener('blur', handleEditNameEnd); nomeLabel.addEventListener('keydown', handleEditNameKeydown); categoriaSelect.addEventListener('change', handleMoveItemCategory); calcularTotalItem(li); if(itemData.preco) handlePriceInputBlur({target: precoInput}); atualizarLuzesStatusItem(li, itemData); return li; };
              const adicionarItemNaCategoria = (itemData, categoriaId, subId = null) => { const catTarget = categoriasContainer.querySelector(`.categoria[data-category-id="${categoriaId}"]`); if (!catTarget) { console.warn(`Categoria ${categoriaId} não encontrada no DOM para item ${itemData.nome}`); return; } const subcatId = subId || `${categoriaId}-geral`; const conteudo = catTarget.querySelector('.categoria-conteudo'); if (!conteudo) return; let listaTarget = conteudo.querySelector(`.lista-itens[data-subcategory="${subcatId}"]`); if (!listaTarget) listaTarget = conteudo.querySelector('.lista-itens'); if (!listaTarget) return; const itemEl = criarElementoItem(itemData); listaTarget.appendChild(itemEl); if (!dadosLista[itemData.id]) dadosLista[itemData.id] = { ...itemData, categoriaId, subcategoriaId: subcatId }; aplicarFiltrosVisibilidadeItens(); updateCategoryToggleButtonState(catTarget); };
              const handleItemDetailsChange = (e) => { const itemEl = e.target.closest('.item-lista'); if (!itemEl) return; const itemId = itemEl.dataset.itemId; if (dadosLista[itemId]) { dadosLista[itemId].qtd = itemEl.querySelector('.input-qtd').value; dadosLista[itemId].preco = itemEl.querySelector('.input-preco').value; } calcularTotalItem(itemEl); const catEl = itemEl.closest('.categoria'); if (catEl) calcularInfoCategoria(catEl); calcularTotalGeral(); salvarDadosAtivos(); };
              const handleItemPurchaseChange = (e) => { const itemEl = e.target.closest('.item-lista'); if (!itemEl) return; const itemId = itemEl.dataset.itemId; if (dadosLista[itemId]) dadosLista[itemId].checked = e.target.checked; aplicarFiltrosVisibilidadeItens(); const catEl = itemEl.closest('.categoria'); if (catEl) { calcularInfoCategoria(catEl); updateCategoryToggleButtonState(catEl); } calcularTotalGeral(); salvarDadosAtivos(); };
@@ -461,9 +601,33 @@
              const handleDeleteAllCategoryItems = (button) => { const catEl = button.closest('.categoria'); if (!catEl) return; const catId = catEl.dataset.categoryId; const nomeCat = catEl.querySelector('.nome-categoria-display')?.textContent || 'esta categoria'; const itemsInSection = catEl.querySelectorAll('.categoria-conteudo .item-lista'); if (itemsInSection.length === 0) { alert(`Não há itens para excluir na categoria "${nomeCat}".`); return; } if (confirm(`Tem certeza que deseja excluir TODOS os ${itemsInSection.length} itens da categoria "${nomeCat}"?`)) { let itensRemovidos = 0; itemsInSection.forEach(itemEl => { const itemId = itemEl.dataset.itemId; if (itemId && dadosLista[itemId]) { delete dadosLista[itemId]; itemEl.remove(); itensRemovidos++; } }); if (itensRemovidos > 0) { console.log(`${itensRemovidos} itens removidos da categoria ${catId}`); calcularInfoCategoria(catEl); updateCategoryToggleButtonState(catEl); calcularTotalGeral(); salvarDadosAtivos(); alert(`${itensRemovidos} itens foram excluídos da categoria "${nomeCat}".`); } } };
              const handleMoveItemCategory = (event) => { const selectElement = event.target; const itemEl = selectElement.closest('.item-lista'); if (!itemEl) return; const itemId = itemEl.dataset.itemId; const newCategoryId = selectElement.value; const oldCategoryId = dadosLista[itemId]?.categoriaId; if (!itemId || !newCategoryId || oldCategoryId === newCategoryId) return; const oldCatEl = categoriasContainer.querySelector(`.categoria[data-category-id="${oldCategoryId}"]`); const newCatEl = categoriasContainer.querySelector(`.categoria[data-category-id="${newCategoryId}"]`); const newCatList = newCatEl?.querySelector('.lista-itens'); if (!newCatEl || !newCatList) { console.error(`Categoria de destino ${newCategoryId} não encontrada no DOM.`); selectElement.value = oldCategoryId; return; } dadosLista[itemId].categoriaId = newCategoryId; dadosLista[itemId].subcategoriaId = `${newCategoryId}-geral`; newCatList.appendChild(itemEl); if (oldCatEl) { calcularInfoCategoria(oldCatEl); updateCategoryToggleButtonState(oldCatEl); } calcularInfoCategoria(newCatEl); updateCategoryToggleButtonState(newCatEl); aplicarFiltrosVisibilidadeItens(); salvarDadosAtivos(); };
 
-             const salvarDadosAtivos = () => { try { const categoriasDOM = Array.from(categoriasContainer.querySelectorAll('.categoria')); const ordemAtualizada = categoriasDOM.map(el => el.dataset.categoryId); const novasDefinicoes = ordemAtualizada.map(id => { let definicao = categoriasDefinidas.find(c => c.id === id); const catEl = categoriasContainer.querySelector(`.categoria[data-category-id="${id}"]`); if (catEl) { const h2 = catEl.querySelector('h2.toggle-categoria'); if (!definicao) { console.warn(`Definição não encontrada para ${id}, criando uma nova.`); definicao = { id: id }; } definicao.nome = catEl.querySelector('.nome-categoria-display')?.textContent || 'Erro Nome'; definicao.emoji = catEl.querySelector('.emoji')?.textContent || '🛒'; definicao.color = h2?.style.backgroundColor || null; const budgetInput = catEl.querySelector('.input-budget-categoria'); definicao.budget = budgetInput ? (budgetInput.value === '' ? null : budgetInput.value) : null; definicao.headerContentVisible = !h2?.classList.contains('header-content-hidden'); return definicao; } return null; }).filter(Boolean); categoriasDefinidas = novasDefinicoes; const d = { listaTitulo, dataCompra: dataCompraInput.value, itens: dadosLista, categoriasDefinidas, categoriasExpandidas: Array.from(categoriasContainer.querySelectorAll('.categoria.expanded')).map(c => c.dataset.categoryId), unselectedVisible: unselectedItemsVisible, alreadyHaveVisible: alreadyHaveItemsVisible, orcamentoTotal: orcamentoTotal }; localStorage.setItem(KEY_STORAGE_ATIVA, JSON.stringify(d)); } catch (e) { console.error("Erro ao salvar dados ativos:", e); } };
-             const carregarDadosAtivos = () => { const s = localStorage.getItem(KEY_STORAGE_ATIVA); let ok = false; if (s) { try { const d = JSON.parse(s); listaTitulo = d.listaTitulo || 'Lista de Compras Avançada'; dadosLista = d.itens || {}; unselectedItemsVisible = d.unselectedVisible !== undefined ? d.unselectedVisible : true; alreadyHaveItemsVisible = d.alreadyHaveVisible !== undefined ? d.alreadyHaveVisible : true; orcamentoTotal = d.orcamentoTotal !== undefined ? d.orcamentoTotal : null; categoriasDefinidas = d.categoriasDefinidas || []; aplicarEstilosTitulo(); categoriasContainer.innerHTML = ''; if (categoriasDefinidas.length > 0) { categoriasDefinidas.forEach(catDef => { if (catDef && catDef.id && catDef.nome) { _criarEstruturaCategoriaHTML(catDef.id, catDef.nome, catDef.emoji, catDef.color, catDef.budget, catDef.headerContentVisible); } else { console.warn("Definição de categoria inválida encontrada:", catDef); } }); } else { _criarEstruturasPadrao(); } Object.values(dadosLista).forEach(item => { if(item && item.id && item.categoriaId) { adicionarItemNaCategoria(item, item.categoriaId, item.subcategoriaId); } else { console.warn("Item inválido encontrado nos dados:", item); } }); dataCompraInput.value = d.dataCompra || ''; if (inputOrcamentoTotal) { if (orcamentoTotal !== null && !isNaN(orcamentoTotal)) { inputOrcamentoTotal.value = parseFloat(orcamentoTotal).toFixed(2); } else { inputOrcamentoTotal.value = ''; } } restaurarEstadoCategorias(d.categoriasExpandidas || []); categoriasContainer.querySelectorAll('.categoria').forEach(catEl => { updateCategoryToggleButtonState(catEl); calcularInfoCategoria(catEl); const budgetInput = catEl.querySelector('.input-budget-categoria'); if (budgetInput && budgetInput.value) handleBudgetInputBlur({ target: budgetInput }); }); aplicarFiltrosVisibilidadeItens(); calcularTotalGeral(); ok = true; } catch (e) { console.error("Erro ao carregar dados ativos:", e); localStorage.removeItem(KEY_STORAGE_ATIVA); ok = false; } } if (!ok) { aplicarEstilosTitulo(); } return ok; };
-             const restaurarEstadoCategorias = (expandidas = []) => { categoriasContainer.querySelectorAll('.categoria').forEach(cat => { const id = cat.dataset.categoryId; const isExp = expandidas.includes(id); cat.classList.toggle('expanded', isExp); const ind = cat.querySelector('.toggle-indicator'); if (ind) ind.textContent = isExp ? '▲' : '▼'; }); };
+             const salvarDadosAtivos = () => { try { const categoriasDOM = Array.from(categoriasContainer.querySelectorAll('.categoria:not(#historico-compras-container)')); const ordemAtualizada = categoriasDOM.map(el => el.dataset.categoryId); const novasDefinicoes = ordemAtualizada.map(id => { let definicao = categoriasDefinidas.find(c => c.id === id); const catEl = categoriasContainer.querySelector(`.categoria[data-category-id="${id}"]`); if (catEl) { const h2 = catEl.querySelector('h2.toggle-categoria'); if (!definicao) { console.warn(`Definição não encontrada para ${id}, criando uma nova.`); definicao = { id: id }; } definicao.nome = catEl.querySelector('.nome-categoria-display')?.textContent || 'Erro Nome'; definicao.emoji = catEl.querySelector('.emoji')?.textContent || '🛒'; definicao.color = h2?.style.backgroundColor || null; const budgetInput = catEl.querySelector('.input-budget-categoria'); definicao.budget = budgetInput ? (budgetInput.value === '' ? null : budgetInput.value) : null; definicao.headerContentVisible = !h2?.classList.contains('header-content-hidden'); return definicao; } return null; }).filter(Boolean); categoriasDefinidas = novasDefinicoes; const d = { listaTitulo, dataCompra: dataCompraInput.value, itens: dadosLista, historicoCompras, categoriasDefinidas, categoriasExpandidas: Array.from(categoriasContainer.querySelectorAll('.categoria.expanded:not(#historico-compras-container)')).map(c => c.dataset.categoryId), unselectedVisible: unselectedItemsVisible, alreadyHaveVisible: alreadyHaveItemsVisible, orcamentoTotal: orcamentoTotal }; localStorage.setItem(KEY_STORAGE_ATIVA, JSON.stringify(d)); } catch (e) { console.error("Erro ao salvar dados ativos:", e); } };
+             const carregarDadosAtivos = () => { const s = localStorage.getItem(KEY_STORAGE_ATIVA); let ok = false; if (s) { try { const d = JSON.parse(s); listaTitulo = d.listaTitulo || 'Lista de Compras Avançada'; dadosLista = d.itens || {}; historicoCompras = d.historicoCompras || []; unselectedItemsVisible = d.unselectedVisible !== undefined ? d.unselectedVisible : true; alreadyHaveItemsVisible = d.alreadyHaveVisible !== undefined ? d.alreadyHaveVisible : true; orcamentoTotal = d.orcamentoTotal !== undefined ? d.orcamentoTotal : null; categoriasDefinidas = d.categoriasDefinidas || []; aplicarEstilosTitulo(); categoriasContainer.innerHTML = ''; if (categoriasDefinidas.length > 0) { categoriasDefinidas.forEach(catDef => { if (catDef && catDef.id && catDef.nome) { _criarEstruturaCategoriaHTML(catDef.id, catDef.nome, catDef.emoji, catDef.color, catDef.budget, catDef.headerContentVisible); } else { console.warn("Definição de categoria inválida encontrada:", catDef); } }); } else { _criarEstruturasPadrao(); } Object.values(dadosLista).forEach(item => { if(item && item.id && item.categoriaId) { adicionarItemNaCategoria(item, item.categoriaId, item.subcategoriaId); } else { console.warn("Item inválido encontrado nos dados:", item); } }); dataCompraInput.value = d.dataCompra || ''; if (inputOrcamentoTotal) { if (orcamentoTotal !== null && !isNaN(orcamentoTotal)) { inputOrcamentoTotal.value = parseFloat(orcamentoTotal).toFixed(2); } else { inputOrcamentoTotal.value = ''; } } renderHistoricoCompras(); restaurarEstadoCategorias(d.categoriasExpandidas || []); categoriasContainer.querySelectorAll('.categoria:not(#historico-compras-container)').forEach(catEl => { updateCategoryToggleButtonState(catEl); calcularInfoCategoria(catEl); const budgetInput = catEl.querySelector('.input-budget-categoria'); if (budgetInput && budgetInput.value) handleBudgetInputBlur({ target: budgetInput }); }); aplicarFiltrosVisibilidadeItens(); calcularTotalGeral(); ok = true; } catch (e) { console.error("Erro ao carregar dados ativos:", e); localStorage.removeItem(KEY_STORAGE_ATIVA); ok = false; } } if (!ok) { aplicarEstilosTitulo(); } return ok; };
+             const restaurarEstadoCategorias = (expandidas = []) => { categoriasContainer.querySelectorAll('.categoria:not(#historico-compras-container)').forEach(cat => { const id = cat.dataset.categoryId; const isExp = expandidas.includes(id); cat.classList.toggle('expanded', isExp); const conteudo = cat.querySelector('.categoria-conteudo'); const ind = cat.querySelector('.toggle-indicator'); if (conteudo && ind) { conteudo.style.maxHeight = isExp ? conteudo.scrollHeight + "px" : '0'; conteudo.style.padding = isExp ? '10px 15px 15px 15px' : '0 15px'; ind.textContent = isExp ? '▲' : '▼'; } }); };
+             const restaurarEstadoHistorico = () => {
+                 try {
+                     const config = JSON.parse(localStorage.getItem(KEY_STORAGE_HISTORICO_COMPRAS_CONFIG) || '{}');
+                     historicoComprasVisivel = config.visible !== undefined ? config.visible : false;
+                     historicoComprasExpandido = config.expanded !== undefined ? config.expanded : false;
+                 } catch (e) {
+                     console.error("Erro ao carregar config do histórico:", e);
+                     historicoComprasVisivel = false;
+                     historicoComprasExpandido = false;
+                 }
+                 historicoComprasContainer.style.display = historicoComprasVisivel ? 'block' : 'none';
+                 const content = historicoComprasContainer.querySelector('.categoria-conteudo');
+                 const indicator = historicoComprasContainer.querySelector('.toggle-indicator');
+                 historicoComprasContainer.classList.toggle('expanded', historicoComprasExpandido);
+                 if (content && indicator) {
+                     content.style.maxHeight = historicoComprasExpandido ? content.scrollHeight + "px" : '0';
+                     content.style.padding = historicoComprasExpandido ? '10px 15px 15px 15px' : '0 15px';
+                     indicator.textContent = historicoComprasExpandido ? '▲' : '▼';
+                 }
+             };
+             const salvarEstadoHistorico = () => {
+                 const config = { visible: historicoComprasVisivel, expanded: historicoComprasExpandido };
+                 localStorage.setItem(KEY_STORAGE_HISTORICO_COMPRAS_CONFIG, JSON.stringify(config));
+             };
 
              const salvarArquivos = () => { try { localStorage.setItem(KEY_STORAGE_ARQUIVOS, JSON.stringify(arquivos)); popularDropdownArquivos(); } catch (e) { console.error("Salvar Arquivos:", e); alert("Erro ao salvar arquivos."); } };
              const carregarArquivos = () => { const s = localStorage.getItem(KEY_STORAGE_ARQUIVOS); if (s) { try { arquivos = JSON.parse(s); } catch (e) { console.error("Carregar Arquivos:", e); localStorage.removeItem(KEY_STORAGE_ARQUIVOS); arquivos = {}; } } else arquivos = {}; popularDropdownArquivos(); };
@@ -474,7 +638,7 @@
              const handleSelecaoArquivoChange = () => { const sel = selectArquivos.value !== ""; btnCarregarArquivo.disabled = !sel; btnDeletarArquivo.disabled = !sel; }
 
              const ordenarItensSubcategoria = (ulElement, sortType, sortDirection) => { if (!ulElement) return; const liElements = Array.from(ulElement.querySelectorAll(':scope > .item-lista')); if (liElements.length < 2) return; const itemsData = liElements.map(li => ({ element: li, checked: li.querySelector('.item-check')?.checked || false, alreadyHave: li.classList.contains('item-already-have'), name: normalizarTexto(li.querySelector('.item-nome')?.textContent || ''), price: parseFloat(li.querySelector('.input-preco')?.value) || 0 })); const compareFn = (a, b) => { switch (sortType) { case 'checked': return sortDirection === 'desc' ? (b.checked - a.checked) : (a.checked - b.checked); case 'alreadyHave': return sortDirection === 'asc' ? (a.alreadyHave - b.alreadyHave) : (b.alreadyHave - a.alreadyHave); case 'name': return sortDirection === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name); case 'price': return sortDirection === 'asc' ? a.price - b.price : b.price - a.price; default: return 0; } }; itemsData.sort(compareFn); itemsData.forEach(item => ulElement.appendChild(item.element)); const sortControlsDiv = ulElement.previousElementSibling; if (sortControlsDiv && sortControlsDiv.classList.contains('ordenacao-controles-categoria')) { sortControlsDiv.querySelectorAll('.btn-sort').forEach(btn => btn.classList.remove('active-sort')); const activeButton = sortControlsDiv.querySelector(`.btn-sort[data-sort-type="${sortType}"][data-sort-direction="${sortDirection}"]`); if (activeButton) activeButton.classList.add('active-sort'); } };
-             const recolherTodasAbas = () => { categoriasContainer.querySelectorAll('.categoria').forEach(cat => { cat.classList.remove('expanded'); const ind = cat.querySelector('.toggle-indicator'); if (ind) ind.textContent = '▼'; }); salvarDadosAtivos(); };
+             const recolherTodasAbas = () => { categoriasContainer.querySelectorAll('.categoria:not(#historico-compras-container)').forEach(cat => { cat.classList.remove('expanded'); const ind = cat.querySelector('.toggle-indicator'); if (ind) ind.textContent = '▼'; const conteudo = cat.querySelector('.categoria-conteudo'); if (conteudo) { conteudo.style.maxHeight = '0'; conteudo.style.padding = '0 15px'; } }); salvarDadosAtivos(); };
 
              const _criarEstruturaCategoriaHTML = (id, nome, emoji = '🆕', cor = null, budget = null, headerVisible = true) => {
                  if (categoriasContainer.querySelector(`.categoria[data-category-id="${id}"]`)) return categoriasContainer.querySelector(`.categoria[data-category-id="${id}"]`);
@@ -532,30 +696,30 @@
              const handleToggleCategoryUnselected = (button) => { const isVisible = button.dataset.visible === 'true'; const newVisibility = !isVisible; button.dataset.visible = newVisibility; button.title = newVisibility ? 'Ocultar Não Comprar (Categoria)' : 'Mostrar Não Comprar (Categoria)'; button.innerHTML = newVisibility ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588M5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474z"/><path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z"/></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.618-2.277A13 13 0 0 1 8 3.5a13 13 0 0 1 5.209 2.223A13 13 0 0 1 14.828 8a13 13 0 0 1-1.618 2.277A13 13 0 0 1 8 12.5a13 13 0 0 1-5.209-2.223A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5m0 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/></svg>`; aplicarFiltrosVisibilidadeItens(); };
              const handleToggleCategoryAlreadyHave = (button) => { const isVisible = button.dataset.visible === 'true'; const newVisibility = !isVisible; button.dataset.visible = newVisibility; button.title = newVisibility ? "Ocultar 'Já Tenho' (Categoria)" : "Mostrar 'Já Tenho' (Categoria)"; aplicarFiltrosVisibilidadeItens(); };
 
-             const aplicarFiltrosVisibilidadeItens = () => { const termoBusca = normalizarTexto(filtroInput.value); const itens = categoriasContainer.querySelectorAll('.item-lista'); itens.forEach(item => { const isChecked = item.querySelector('.item-check')?.checked; const isAlreadyHave = item.classList.contains('item-already-have'); const nomeItem = normalizarTexto(item.querySelector('.item-nome')?.textContent || ''); const hiddenBySearch = termoBusca && !nomeItem.includes(termoBusca); const catEl = item.closest('.categoria'); const catBtnUnselected = catEl?.querySelector('.btn-toggle-cat-unselected'); const catBtnAlready = catEl?.querySelector('.btn-toggle-cat-already'); const catUnselectedVisible = catBtnUnselected ? catBtnUnselected.dataset.visible === 'true' : true; const catAlreadyHaveVisible = catBtnAlready ? catBtnAlready.dataset.visible === 'true' : true; const hideBecauseGlobalUnselected = !unselectedItemsVisible && !isChecked; const hideBecauseCatUnselected = !catUnselectedVisible && !isChecked; const hideBecauseGlobalAlready = !alreadyHaveItemsVisible && isAlreadyHave; const hideBecauseCatAlready = !catAlreadyHaveVisible && isAlreadyHave; const shouldBeHiddenByFilter = hideBecauseGlobalUnselected || hideBecauseCatUnselected || hideBecauseGlobalAlready || hideBecauseCatAlready; item.classList.toggle('hidden', hiddenBySearch); item.classList.toggle('item-hidden-by-filter', shouldBeHiddenByFilter); }); categoriasContainer.querySelectorAll('.categoria').forEach(calcularInfoCategoria); calcularTotalGeral(); };
+             const aplicarFiltrosVisibilidadeItens = () => { const termoBusca = normalizarTexto(filtroInput.value); const itens = categoriasContainer.querySelectorAll('.item-lista'); itens.forEach(item => { const isChecked = item.querySelector('.item-check')?.checked; const isAlreadyHave = item.classList.contains('item-already-have'); const nomeItem = normalizarTexto(item.querySelector('.item-nome')?.textContent || ''); const hiddenBySearch = termoBusca && !nomeItem.includes(termoBusca); const catEl = item.closest('.categoria'); const catBtnUnselected = catEl?.querySelector('.btn-toggle-cat-unselected'); const catBtnAlready = catEl?.querySelector('.btn-toggle-cat-already'); const catUnselectedVisible = catBtnUnselected ? catBtnUnselected.dataset.visible === 'true' : true; const catAlreadyHaveVisible = catBtnAlready ? catBtnAlready.dataset.visible === 'true' : true; const hideBecauseGlobalUnselected = !unselectedItemsVisible && !isChecked; const hideBecauseCatUnselected = !catUnselectedVisible && !isChecked; const hideBecauseGlobalAlready = !alreadyHaveItemsVisible && isAlreadyHave; const hideBecauseCatAlready = !catAlreadyHaveVisible && isAlreadyHave; const shouldBeHiddenByFilter = hideBecauseGlobalUnselected || hideBecauseCatUnselected || hideBecauseGlobalAlready || hideBecauseCatAlready; item.classList.toggle('hidden', hiddenBySearch); item.classList.toggle('item-hidden-by-filter', shouldBeHiddenByFilter); }); categoriasContainer.querySelectorAll('.categoria:not(#historico-compras-container)').forEach(calcularInfoCategoria); calcularTotalGeral(); };
 
              const handleTitleEditStart = (e) => { currentEditingTitle = listaTituloSpan.textContent; };
              const handleTitleEditEnd = (e) => { const novoTitulo = listaTituloSpan.textContent.trim(); if (novoTitulo && novoTitulo !== listaTitulo) listaTitulo = novoTitulo; else listaTituloSpan.textContent = listaTitulo; salvarDadosAtivos(); };
              const handleTitleEditKeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } else if (e.key === 'Escape') { e.target.textContent = currentEditingTitle; e.target.blur(); } };
              const aplicarEstilosTitulo = () => { if (listaTituloSpan) { listaTituloSpan.textContent = listaTitulo; } };
 
-             const gerarTextoLista = () => { let content = `${listaTitulo}\nData: ${dataCompraInput.value || new Date().toLocaleDateString('pt-BR')}\n`; if (orcamentoTotal !== null && !isNaN(orcamentoTotal)) { content += `Orçamento Total: ${formatarMoeda(orcamentoTotal)}\n`; } content += `========================================\n\n`; categoriasContainer.querySelectorAll('.categoria').forEach(cat => { const nomeCat = cat.querySelector('.nome-categoria-display')?.textContent || cat.dataset.categoryId; const emojiCat = cat.querySelector('.emoji')?.textContent || ''; const budgetInput = cat.querySelector('.input-budget-categoria'); const budgetValue = budgetInput ? parseFloat(budgetInput.value) : NaN; const budgetStr = !isNaN(budgetValue) && budgetValue > 0 ? ` (Orçamento: ${formatarMoeda(budgetValue)})` : ''; const warningStr = cat.querySelector('.budget-warning')?.style.display !== 'none' ? ' [ORÇAMENTO EXCEDIDO]' : ''; content += `${emojiCat} ${nomeCat}${budgetStr}${warningStr}\n--------------------\n`; let algumItemVisivelNaCategoria = false; cat.querySelectorAll('.lista-itens .item-lista:not(.hidden):not(.item-hidden-by-filter)').forEach(itemEl => { const alreadyHaveCheck = itemEl.querySelector('.item-already-have-check')?.checked ? '[✓ Já Tenho] ' : '[ ] '; const check = itemEl.querySelector('.item-check')?.checked ? '[x Comprar] ' : '[_] '; const nome = itemEl.querySelector('.item-nome')?.textContent || '?'; const qtd = itemEl.querySelector('.input-qtd')?.value || '0'; const precoUnit = parseFloat(itemEl.querySelector('.input-preco')?.value) || 0; const totalItem = (parseFloat(qtd) || 0) * precoUnit; content += `${alreadyHaveCheck}${check}${nome} (Qtd: ${qtd}, Preço: ${formatarMoeda(precoUnit)}) = ${formatarMoeda(totalItem)}\n`; algumItemVisivelNaCategoria = true; }); if (!algumItemVisivelNaCategoria) content += "(Nenhum item visível com filtros atuais)\n"; const totalCatStr = cat.querySelector('.categoria-total')?.textContent || ''; content += `${totalCatStr}\n\n`; }); content += `========================================\n`; const totalGeralStr = valorTotalGeralSpan.textContent; content += `Produtos: ${contadorProdutosSpan.textContent} | Total: ${totalGeralStr}`; if (totalGeralDisplay.classList.contains('orcamento-excedido')) { content += ` [ORÇAMENTO TOTAL EXCEDIDO!]`; } content += `\n`; return content; }
+             const gerarTextoLista = () => { let content = `${listaTitulo}\nData: ${dataCompraInput.value || new Date().toLocaleDateString('pt-BR')}\n`; if (orcamentoTotal !== null && !isNaN(orcamentoTotal)) { content += `Orçamento Total: ${formatarMoeda(orcamentoTotal)}\n`; } content += `========================================\n\n`; categoriasContainer.querySelectorAll('.categoria:not(#historico-compras-container)').forEach(cat => { const nomeCat = cat.querySelector('.nome-categoria-display')?.textContent || cat.dataset.categoryId; const emojiCat = cat.querySelector('.emoji')?.textContent || ''; const budgetInput = cat.querySelector('.input-budget-categoria'); const budgetValue = budgetInput ? parseFloat(budgetInput.value) : NaN; const budgetStr = !isNaN(budgetValue) && budgetValue > 0 ? ` (Orçamento: ${formatarMoeda(budgetValue)})` : ''; const warningStr = cat.querySelector('.budget-warning')?.style.display !== 'none' ? ' [ORÇAMENTO EXCEDIDO]' : ''; content += `${emojiCat} ${nomeCat}${budgetStr}${warningStr}\n--------------------\n`; let algumItemVisivelNaCategoria = false; cat.querySelectorAll('.lista-itens .item-lista:not(.hidden):not(.item-hidden-by-filter)').forEach(itemEl => { const alreadyHaveCheck = itemEl.querySelector('.item-already-have-check')?.checked ? '[✓ Já Tenho] ' : '[ ] '; const check = itemEl.querySelector('.item-check')?.checked ? '[x Comprar] ' : '[_] '; const nome = itemEl.querySelector('.item-nome')?.textContent || '?'; const qtd = itemEl.querySelector('.input-qtd')?.value || '0'; const precoUnit = parseFloat(itemEl.querySelector('.input-preco')?.value) || 0; const totalItem = (parseFloat(qtd) || 0) * precoUnit; content += `${alreadyHaveCheck}${check}${nome} (Qtd: ${qtd}, Preço: ${formatarMoeda(precoUnit)}) = ${formatarMoeda(totalItem)}\n`; algumItemVisivelNaCategoria = true; }); if (!algumItemVisivelNaCategoria) content += "(Nenhum item visível com filtros atuais)\n"; const totalCatStr = cat.querySelector('.categoria-total')?.textContent || ''; content += `${totalCatStr}\n\n`; }); content += `========================================\n`; const totalGeralStr = valorTotalGeralSpan.textContent; content += `Produtos: ${contadorProdutosSpan.textContent} | Total: ${totalGeralStr}`; if (totalGeralDisplay.classList.contains('orcamento-excedido')) { content += ` [ORÇAMENTO TOTAL EXCEDIDO!]`; } content += `\n`; return content; }
              const exportarListaAtualTxt = () => { const content = gerarTextoLista(); const blob = new Blob([content], { type: 'text/plain;charset=utf-8' }); const link = document.createElement("a"); const url = URL.createObjectURL(blob); link.setAttribute("href", url); const dataSimples = (dataCompraInput.value || new Date().toISOString().slice(0,10)).replace(/-/g,''); const nomeBaseArquivo = normalizarTexto(listaTitulo).replace(/\s+/g, '_') || 'lista_compras'; link.setAttribute("download", `${nomeBaseArquivo}_${dataSimples}.txt`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); };
              const exportarListaSimplesJson = () => { const listaSimples = Object.values(dadosLista).map(item => ({ nome: item.nome, preco: String(item.preco || ''), qtd: String(item.qtd || '1.0'), categoriaId: item.categoriaId })); const jsonString = JSON.stringify(listaSimples, null, 2); const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' }); const link = document.createElement("a"); const url = URL.createObjectURL(blob); link.setAttribute("href", url); const dataSimples = (dataCompraInput.value || new Date().toISOString().slice(0,10)).replace(/-/g,''); const nomeBaseArquivo = normalizarTexto(listaTitulo).replace(/\s+/g, '_') || 'lista_compras'; link.setAttribute("download", `${nomeBaseArquivo}_${dataSimples}_simples.json`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); };
              const copiarListaParaClipboard = async () => { const content = gerarTextoLista(); try { await navigator.clipboard.writeText(content); alert('Lista copiada para a área de transferência!'); } catch (err) { console.error('Falha ao copiar texto: ', err); alert('Erro ao copiar a lista. Verifique as permissões do navegador ou tente novamente.'); } };
 
-             function handleDragStart(e) { const categoryElement = e.target.closest('.categoria'); if (!categoryElement) { e.preventDefault(); return; } draggedCategory = categoryElement; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', draggedCategory.dataset.categoryId); setTimeout(() => { if(draggedCategory) draggedCategory.classList.add('dragging'); }, 0); }
+             function handleDragStart(e) { const categoryElement = e.target.closest('.categoria:not(#historico-compras-container)'); if (!categoryElement) { e.preventDefault(); return; } draggedCategory = categoryElement; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', draggedCategory.dataset.categoryId); setTimeout(() => { if(draggedCategory) draggedCategory.classList.add('dragging'); }, 0); }
              function handleDragEnd(e) { if (draggedCategory) draggedCategory.classList.remove('dragging'); categoriasContainer.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); draggedCategory = null; salvarDadosAtivos(); }
-             function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; const targetCategory = e.target.closest('.categoria'); categoriasContainer.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); if (targetCategory && targetCategory !== draggedCategory) { targetCategory.classList.add('drag-over'); } }
+             function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; const targetCategory = e.target.closest('.categoria:not(#historico-compras-container)'); categoriasContainer.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); if (targetCategory && targetCategory !== draggedCategory) { targetCategory.classList.add('drag-over'); } }
              function handleDragLeave(e) { const currentTarget = e.currentTarget; if (currentTarget.contains(e.relatedTarget)) { return; } if (currentTarget.classList.contains('drag-over')) { currentTarget.classList.remove('drag-over'); } }
-             function handleDrop(e) { e.preventDefault(); e.stopPropagation(); if (!draggedCategory) return; const dropTarget = e.target; const targetCategory = dropTarget.closest('.categoria'); draggedCategory.classList.remove('dragging'); categoriasContainer.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); if (targetCategory && targetCategory !== draggedCategory) { const rect = targetCategory.getBoundingClientRect(); const offsetY = e.clientY - rect.top; const threshold = rect.height / 2; if (offsetY < threshold) categoriasContainer.insertBefore(draggedCategory, targetCategory); else categoriasContainer.insertBefore(draggedCategory, targetCategory.nextSibling); } else if (!targetCategory && draggedCategory.parentNode === categoriasContainer) { categoriasContainer.appendChild(draggedCategory); } }
+             function handleDrop(e) { e.preventDefault(); e.stopPropagation(); if (!draggedCategory) return; const dropTarget = e.target; const targetCategory = dropTarget.closest('.categoria:not(#historico-compras-container)'); draggedCategory.classList.remove('dragging'); categoriasContainer.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); if (targetCategory && targetCategory !== draggedCategory) { const rect = targetCategory.getBoundingClientRect(); const offsetY = e.clientY - rect.top; const threshold = rect.height / 2; if (offsetY < threshold) categoriasContainer.insertBefore(draggedCategory, targetCategory); else categoriasContainer.insertBefore(draggedCategory, targetCategory.nextSibling); } else if (!targetCategory && draggedCategory.parentNode === categoriasContainer) { categoriasContainer.appendChild(draggedCategory); } }
 
              function openColorPicker(button) { currentPopupTargetType = 'category'; colorPickerPopup.innerHTML = ''; const colorsToUse = DEFAULT_COLORS; colorsToUse.forEach(color => { const swatch = document.createElement('div'); swatch.className = 'color-swatch'; swatch.style.backgroundColor = color; swatch.dataset.color = color; colorPickerPopup.appendChild(swatch); }); const rect = button.getBoundingClientRect(); colorPickerPopup.style.top = `${window.scrollY + rect.bottom + 5}px`; colorPickerPopup.style.left = `${window.scrollX + rect.left}px`; colorPickerPopup.style.display = 'flex'; delete colorPickerPopup.dataset.editingCategory; const categoriaEl = button.closest('.categoria'); if (categoriaEl) colorPickerPopup.dataset.editingCategory = categoriaEl.dataset.categoryId; }
              function selectColor(e) { if (!e.target.classList.contains('color-swatch')) return; const chosenColor = e.target.dataset.color; if (!chosenColor) return; const categoryId = colorPickerPopup.dataset.editingCategory; if (!categoryId) return; const catEl = categoriasContainer.querySelector(`.categoria[data-category-id="${categoryId}"]`); const h2 = catEl?.querySelector('h2.toggle-categoria'); if (h2) h2.style.backgroundColor = chosenColor; const catIndex = categoriasDefinidas.findIndex(c => c.id === categoryId); if (catIndex > -1) categoriasDefinidas[catIndex].color = chosenColor; closeColorPicker(); salvarDadosAtivos(); }
              function closeColorPicker() { colorPickerPopup.style.display = 'none'; delete colorPickerPopup.dataset.editingCategory; currentPopupTargetType = null; }
              document.addEventListener('click', (e) => { if (colorPickerPopup.style.display === 'flex' && !colorPickerPopup.contains(e.target) && !e.target.classList.contains('btn-color-categoria')) { closeColorPicker(); } });
 
-             const handleZerarListas = () => { if (!confirm('Tem certeza que deseja excluir TODOS os itens de TODAS as categorias? Esta ação não pode ser desfeita.')) { return; } let totalItensRemovidos = 0; categoriasContainer.querySelectorAll('.categoria').forEach(catEl => { const catId = catEl.dataset.categoryId; const itemsInSection = catEl.querySelectorAll('.categoria-conteudo .item-lista'); itemsInSection.forEach(itemEl => { const itemId = itemEl.dataset.itemId; if (itemId && dadosLista[itemId]) { delete dadosLista[itemId]; itemEl.remove(); totalItensRemovidos++; } }); calcularInfoCategoria(catEl); updateCategoryToggleButtonState(catEl); }); if (totalItensRemovidos > 0) { console.log(`${totalItensRemovidos} itens removidos de todas as categorias.`); calcularTotalGeral(); salvarDadosAtivos(); alert(`${totalItensRemovidos} itens foram excluídos de todas as listas.`); } else { alert("Nenhum item encontrado para excluir."); } };
+             const handleZerarListas = () => { if (!confirm('Tem certeza que deseja excluir TODOS os itens de TODAS as categorias? Esta ação não pode ser desfeita.')) { return; } let totalItensRemovidos = 0; categoriasContainer.querySelectorAll('.categoria:not(#historico-compras-container)').forEach(catEl => { const catId = catEl.dataset.categoryId; const itemsInSection = catEl.querySelectorAll('.categoria-conteudo .item-lista'); itemsInSection.forEach(itemEl => { const itemId = itemEl.dataset.itemId; if (itemId && dadosLista[itemId]) { delete dadosLista[itemId]; itemEl.remove(); totalItensRemovidos++; } }); calcularInfoCategoria(catEl); updateCategoryToggleButtonState(catEl); }); if (totalItensRemovidos > 0) { console.log(`${totalItensRemovidos} itens removidos de todas as categorias.`); calcularTotalGeral(); salvarDadosAtivos(); alert(`${totalItensRemovidos} itens foram excluídos de todas as listas.`); } else { alert("Nenhum item encontrado para excluir."); } };
 
              const _populateSingleItemCategorySelect = (selectElement, selectedCategoryId) => { if (!selectElement) return; selectElement.innerHTML = ''; categoriasDefinidas.forEach(catDef => { const option = document.createElement('option'); option.value = catDef.id; option.textContent = catDef.nome; selectElement.appendChild(option); }); if (categoriasDefinidas.some(c => c.id === selectedCategoryId)) { selectElement.value = selectedCategoryId; } else if (selectElement.options.length > 0) { selectElement.selectedIndex = 0; } };
              const _updateAllItemCategorySelects = () => { const allSelects = categoriasContainer.querySelectorAll('.item-categoria-select'); allSelects.forEach(selectEl => { const itemEl = selectEl.closest('.item-lista'); const itemId = itemEl?.dataset.itemId; if (itemId && dadosLista[itemId]) { _populateSingleItemCategorySelect(selectEl, dadosLista[itemId].categoriaId); } }); };
@@ -578,7 +742,7 @@
                  }
              };
 
-            const handleToggleHeaderContent = (button) => {
+             const handleToggleHeaderContent = (button) => {
                  const h2 = button.closest('h2.toggle-categoria');
                  if (!h2) return;
                  const catId = h2.closest('.categoria')?.dataset.categoryId;
@@ -598,12 +762,181 @@
                  button.title = categoria.headerContentVisible ? 'Ocultar Detalhes do Cabeçalho' : 'Mostrar Detalhes do Cabeçalho';
 
                  salvarDadosAtivos();
+             };
+
+             const criarElementoHistoricoCompra = (itemComprado) => {
+                 const li = document.createElement('li');
+                 li.className = 'item-lista item-comprado';
+                 li.dataset.purchasedId = itemComprado.purchaseId;
+                 const purchaseTimestamp = new Date(itemComprado.dataHoraCompra).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short'});
+                 const total = (parseFloat(itemComprado.qtd) || 0) * (parseFloat(itemComprado.preco) || 0);
+                 li.innerHTML = `
+                     <div>
+                         <span class="item-status-lights"></span>
+                         <span style="font-weight: 500;">${itemComprado.nome}</span>
+                         <span class="item-comprado-timestamp">${purchaseTimestamp}</span>
+                     </div>
+                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap;">
+                         <span class="item-comprado-info">Qtd: ${itemComprado.qtd} @ ${formatarMoeda(itemComprado.preco)} = </span>
+                         <span class="item-comprado-valor">${formatarMoeda(total)}</span>
+                         <div class="item-comprado-actions">
+                           <button class="btn-delete-history-item" title="Excluir do histórico" data-purchased-id="${itemComprado.purchaseId}">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                            <button class="btn-readd-item" title="Adicionar de volta à lista" data-purchased-id="${itemComprado.purchaseId}">
+                               <i class="fa-solid fa-rotate-left"></i> Re-adicionar
+                            </button>
+                         </div>
+                     </div>`;
+                 atualizarLuzesStatusHistorico(li, itemComprado);
+                 return li;
+             };
+
+             const renderHistoricoCompras = () => {
+                 if (!listaHistoricoCompras) return;
+                 listaHistoricoCompras.innerHTML = '';
+                 const historicoOrdenado = [...historicoCompras].sort((a, b) => b.dataHoraCompra - a.dataHoraCompra);
+                 historicoOrdenado.forEach(item => {
+                     listaHistoricoCompras.appendChild(criarElementoHistoricoCompra(item));
+                 });
+             };
+
+             const handlePurchaseClick = (button) => {
+                 const itemEl = button.closest('.item-lista');
+                 if (!itemEl) return;
+                 const itemId = itemEl.dataset.itemId;
+                 if (!dadosLista[itemId]) return;
+
+                 const itemData = dadosLista[itemId];
+                 const nome = itemData.nome;
+                 const qtd = itemEl.querySelector('.input-qtd').value || '1.0';
+                 const preco = itemEl.querySelector('.input-preco').value || '0';
+
+                 if (!confirm(`Marcar "${nome}" como comprado (Qtd: ${qtd}, Preço: ${formatarMoeda(preco)})? O item será movido para o histórico.`)) {
+                     return;
+                 }
+
+                 const purchasedItemData = {
+                     purchaseId: gerarIdUnico(),
+                     nome: nome,
+                     qtd: qtd,
+                     preco: preco,
+                     categoriaIdOriginal: itemData.categoriaId,
+                     dataHoraCompra: Date.now()
+                 };
+
+                 historicoCompras.push(purchasedItemData);
+                 renderHistoricoCompras();
+
+                 const catEl = itemEl.closest('.categoria');
+                 delete dadosLista[itemId];
+                 itemEl.remove();
+
+                 if (catEl) {
+                     calcularInfoCategoria(catEl);
+                     updateCategoryToggleButtonState(catEl);
+                 }
+                 calcularTotalGeral();
+                 salvarDadosAtivos();
+
+                 if (!historicoComprasVisivel) {
+                    alert(`Item "${nome}" movido para o Histórico de Compras (oculto). Clique no botão 'Histórico' para visualizar.`);
+                 }
+             };
+
+             const handleReAddFromHistory = (purchasedId) => {
+                 if (!purchasedId) return;
+                 const itemComprado = historicoCompras.find(item => item.purchaseId === purchasedId);
+                 if (!itemComprado) {
+                     alert("Erro: Item comprado não encontrado no histórico.");
+                     return;
+                 }
+
+                 const { nome, qtd, preco, categoriaIdOriginal } = itemComprado;
+
+                 if (!confirm(`Re-adicionar "${nome}" (Qtd: ${qtd}, Preço: ${formatarMoeda(preco)}) à lista de compras? O item permanecerá no histórico.`)) {
+                     return;
+                 }
+
+                 let targetCategoryId = null;
+                 const originalCategoryExists = categoriasDefinidas.some(cat => cat.id === categoriaIdOriginal);
+
+                 if (originalCategoryExists) {
+                     targetCategoryId = categoriaIdOriginal;
+                 } else {
+                     const selectedCatId = novoProdutoCategoriaSelect.value;
+                     if (selectedCatId && categoriasDefinidas.some(cat => cat.id === selectedCatId)) {
+                         targetCategoryId = selectedCatId;
+                         alert(`Categoria original "${categoriaIdOriginal || 'N/A'}" não encontrada. Adicionando à categoria selecionada: ${categoriasDefinidas.find(c => c.id === targetCategoryId)?.nome || targetCategoryId}.`);
+                     } else if (categoriasDefinidas.length > 0) {
+                         targetCategoryId = categoriasDefinidas[0].id;
+                         alert(`Categoria original "${categoriaIdOriginal || 'N/A'}" não encontrada e nenhuma selecionada. Adicionando à primeira categoria: ${categoriasDefinidas[0].nome}.`);
+                     } else {
+                         alert("Erro: Nenhuma categoria disponível para adicionar o item.");
+                         return;
+                     }
+                 }
+
+                 const nomeNormalizado = normalizarTexto(nome);
+                 const itemJaExiste = Object.values(dadosLista).find(itemExistente => normalizarTexto(itemExistente.nome) === nomeNormalizado && itemExistente.categoriaId === targetCategoryId);
+
+                 if (itemJaExiste) {
+                     alert(`O item "${nome}" já existe na categoria "${categoriasDefinidas.find(c => c.id === targetCategoryId)?.nome || targetCategoryId}". Nenhuma ação foi tomada.`);
+                     return;
+                 }
+
+                 const novoItemData = {
+                     id: gerarIdUnico(),
+                     nome: nome,
+                     checked: false,
+                     alreadyHave: false,
+                     qtd: String(qtd || '1.0'),
+                     preco: String(preco || ''),
+                     dataAdicao: getDataAtualFormatada(),
+                     categoriaId: targetCategoryId,
+                     subcategoriaId: `${targetCategoryId}-geral`,
+                     dataReAdicao: Date.now() // Registra o momento da re-adição
+                 };
+                 dadosLista[novoItemData.id] = novoItemData;
+
+                 adicionarItemNaCategoria(novoItemData, targetCategoryId);
+
+                 const catEl = categoriasContainer.querySelector(`.categoria[data-category-id="${targetCategoryId}"]`);
+                 if (catEl) {
+                     calcularInfoCategoria(catEl);
+                      updateCategoryToggleButtonState(catEl);
+                      if (!catEl.classList.contains('expanded')) {
+                         const header = catEl.querySelector('.toggle-categoria');
+                         if (header) header.click();
+                      }
+                 }
+                 calcularTotalGeral();
+                 salvarDadosAtivos();
+
+                 alert(`"${nome}" foi adicionado de volta à lista na categoria "${categoriasDefinidas.find(c => c.id === targetCategoryId)?.nome || targetCategoryId}".`);
+             };
+
+            const handleDeleteHistoryItem = (purchasedId) => {
+                 if (!purchasedId) return;
+                 const itemIndex = historicoCompras.findIndex(item => item.purchaseId === purchasedId);
+                 if (itemIndex === -1) {
+                     alert("Erro: Item comprado não encontrado no histórico.");
+                     return;
+                 }
+                 const itemComprado = historicoCompras[itemIndex];
+                 if (!confirm(`Excluir permanentemente "${itemComprado.nome}" do histórico de compras? Esta ação não pode ser desfeita.`)) {
+                     return;
+                 }
+
+                 historicoCompras.splice(itemIndex, 1);
+                 renderHistoricoCompras();
+                 salvarDadosAtivos();
+                 alert(`"${itemComprado.nome}" excluído do histórico.`);
             };
 
-
-             const popularSelectCategorias = () => { const c = categoriasContainer.querySelectorAll('.categoria'); const valorAtual = novoProdutoCategoriaSelect.value; novoProdutoCategoriaSelect.innerHTML = ''; c.forEach(cat => { const o=document.createElement('option'); const n=cat.querySelector('.nome-categoria-display'); let t = n ? n.textContent.trim() : 'Cat s/ nome'; o.value = cat.dataset.categoryId; o.textContent = t || cat.dataset.categoryId; novoProdutoCategoriaSelect.appendChild(o); }); if (valorAtual && novoProdutoCategoriaSelect.querySelector(`option[value="${valorAtual}"]`)) { novoProdutoCategoriaSelect.value = valorAtual; } else if (novoProdutoCategoriaSelect.options.length > 0) { novoProdutoCategoriaSelect.selectedIndex = 0;} };
+             const popularSelectCategorias = () => { const c = categoriasContainer.querySelectorAll('.categoria:not(#historico-compras-container)'); const valorAtual = novoProdutoCategoriaSelect.value; novoProdutoCategoriaSelect.innerHTML = ''; c.forEach(cat => { const o=document.createElement('option'); const n=cat.querySelector('.nome-categoria-display'); let t = n ? n.textContent.trim() : 'Cat s/ nome'; o.value = cat.dataset.categoryId; o.textContent = t || cat.dataset.categoryId; novoProdutoCategoriaSelect.appendChild(o); }); if (valorAtual && novoProdutoCategoriaSelect.querySelector(`option[value="${valorAtual}"]`)) { novoProdutoCategoriaSelect.value = valorAtual; } else if (novoProdutoCategoriaSelect.options.length > 0) { novoProdutoCategoriaSelect.selectedIndex = 0;} };
              const inicializarApp = () => {
-                 console.log("Inicializando App v4.11.6 - Adicionar Preço/Data");
+                 console.log("Inicializando App v4.11.11 - Ações no Histórico");
                  carregarArquivos();
                  if (!carregarDadosAtivos()) {
                     console.log("Nenhuma lista ativa. Inicializando padrão.");
@@ -611,7 +944,7 @@
                     _criarEstruturasPadrao();
                     popularListaInicial();
                     aplicarEstilosTitulo();
-                    categoriasContainer.querySelectorAll('.categoria').forEach(catEl => {
+                    categoriasContainer.querySelectorAll('.categoria:not(#historico-compras-container)').forEach(catEl => {
                         updateCategoryToggleButtonState(catEl);
                         calcularInfoCategoria(catEl);
                         const budgetInput = catEl.querySelector('.input-budget-categoria');
@@ -626,6 +959,15 @@
                  popularSelectCategorias();
                  _updateAllItemCategorySelects();
 
+                 // Atualizar luzes para itens já existentes ao carregar
+                 Object.values(dadosLista).forEach(itemData => {
+                     const itemEl = categoriasContainer.querySelector(`.item-lista[data-item-id="${itemData.id}"]`);
+                     if (itemEl) {
+                         atualizarLuzesStatusItem(itemEl, itemData);
+                     }
+                 });
+
+
                  try {
                      const savedState = localStorage.getItem(KEY_STORAGE_CONTROLES_FINAIS_VISIBLE);
                      if (savedState !== null) {
@@ -638,6 +980,7 @@
                      controlesFinaisVisible = true;
                  }
                  atualizarVisibilidadeControlesFinaisUI();
+                 restaurarEstadoHistorico();
 
                  addProdutoBtn.addEventListener('click', () => {
                      const nomeNovo = novoProdutoNomeInput.value.trim();
@@ -698,6 +1041,28 @@
                  filtroInput.addEventListener('input', aplicarFiltrosVisibilidadeItens);
                  btnToggleControlesFinais.addEventListener('click', handleToggleControlesFinais);
 
+                 btnToggleHistorico.addEventListener('click', () => {
+                    historicoComprasVisivel = !historicoComprasVisivel;
+                    historicoComprasContainer.style.display = historicoComprasVisivel ? 'block' : 'none';
+                    salvarEstadoHistorico();
+                 });
+
+                 if (toggleHistoricoComprasHeader) {
+                     toggleHistoricoComprasHeader.addEventListener('click', () => {
+                         historicoComprasExpandido = !historicoComprasExpandido;
+                         const content = historicoComprasContainer.querySelector('.categoria-conteudo');
+                         const indicator = historicoComprasContainer.querySelector('.toggle-indicator');
+                         historicoComprasContainer.classList.toggle('expanded', historicoComprasExpandido);
+                         if (content && indicator) {
+                            content.style.maxHeight = historicoComprasExpandido ? content.scrollHeight + "px" : '0';
+                            content.style.padding = historicoComprasExpandido ? '10px 15px 15px 15px' : '0 15px';
+                            indicator.textContent = historicoComprasExpandido ? '▲' : '▼';
+                         }
+                         salvarEstadoHistorico();
+                     });
+                 }
+
+
                  listaTituloSpan.addEventListener('focus', handleTitleEditStart);
                  listaTituloSpan.addEventListener('blur', handleTitleEditEnd);
                  listaTituloSpan.addEventListener('keydown', handleTitleEditKeydown);
@@ -718,6 +1083,7 @@
                      const btnSort = target.closest('.btn-sort');
                      const btnQtdDown = target.closest('.btn-qtd-down');
                      const btnQtdUp = target.closest('.btn-qtd-up');
+                     const btnComprar = target.closest('.btn-comprar-item');
                      const headerCategoria = target.closest('h2.toggle-categoria');
 
                      if (btnToggleHeader) handleToggleHeaderContent(btnToggleHeader);
@@ -730,7 +1096,8 @@
                      else if (btnToggleCatAlready) handleToggleCategoryAlreadyHave(btnToggleCatAlready);
                      else if (btnSort) { const sortType = btnSort.dataset.sortType; const sortDirection = btnSort.dataset.sortDirection; const sortControlsDiv = btnSort.closest('.ordenacao-controles-categoria'); const ulToSort = sortControlsDiv?.nextElementSibling; if (ulToSort && ulToSort.tagName === 'UL') ordenarItensSubcategoria(ulToSort, sortType, sortDirection); }
                      else if (btnQtdDown || btnQtdUp) handleStepperClick(target);
-                     else if (headerCategoria && !target.closest('.cabecalho-acoes') && !target.closest('.nome-categoria-display[contenteditable="true"]') && !target.closest('.cabecalho-info') && !target.closest('.drag-handle') && !target.closest('.input-budget-categoria') && !target.closest('.btn-toggle-header-content')) { const catEl = headerCategoria.closest('.categoria'); if(catEl) { catEl.classList.toggle('expanded'); const ind = headerCategoria.querySelector('.toggle-indicator'); if(ind) ind.textContent = catEl.classList.contains('expanded') ? '▲' : '▼'; salvarDadosAtivos(); } }
+                     else if (btnComprar) handlePurchaseClick(btnComprar);
+                     else if (headerCategoria && !target.closest('.cabecalho-acoes') && !target.closest('.nome-categoria-display[contenteditable="true"]') && !target.closest('.cabecalho-info') && !target.closest('.drag-handle') && !target.closest('.input-budget-categoria') && !target.closest('.btn-toggle-header-content')) { const catEl = headerCategoria.closest('.categoria'); if(catEl) { catEl.classList.toggle('expanded'); const isExpanded = catEl.classList.contains('expanded'); const ind = headerCategoria.querySelector('.toggle-indicator'); const conteudo = catEl.querySelector('.categoria-conteudo'); if(ind && conteudo) { ind.textContent = isExpanded ? '▲' : '▼'; conteudo.style.maxHeight = isExpanded ? conteudo.scrollHeight + "px" : '0'; conteudo.style.padding = isExpanded ? '10px 15px 15px 15px' : '0 15px'; } salvarDadosAtivos(); } }
                  });
                  categoriasContainer.addEventListener('change', (event) => { if (event.target.classList.contains('item-categoria-select')) { handleMoveItemCategory(event); } });
                  categoriasContainer.addEventListener('input', (e) => { if (e.target.classList.contains('input-budget-categoria')) handleBudgetChange(e.target); });
@@ -744,10 +1111,24 @@
                  categoriasContainer.addEventListener('dragleave', handleDragLeave);
                  categoriasContainer.addEventListener('drop', handleDrop);
                  colorPickerPopup.addEventListener('click', selectColor);
+
+                 listaHistoricoCompras.addEventListener('click', (event) => {
+                     const target = event.target;
+                     const btnDelete = target.closest('.btn-delete-history-item');
+                     const btnReAdd = target.closest('.btn-readd-item');
+                     const purchasedId = target.closest('.item-comprado')?.dataset.purchasedId;
+
+                     if (btnDelete && purchasedId) {
+                         handleDeleteHistoryItem(purchasedId);
+                     } else if (btnReAdd && purchasedId) {
+                         handleReAddFromHistory(purchasedId);
+                     }
+                 });
+
                  console.log("App inicializado e listeners configurados.");
              };
 
-             const handleImportarArquivo = (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { const content = e.target.result; let importedData; let itensImportados = 0; let itensIgnorados = 0; try { importedData = JSON.parse(content); } catch (error) { console.error("Erro ao parsear JSON:", error); alert("Erro ao ler o arquivo. Verifique se é um arquivo JSON válido."); event.target.value = null; return; } if (!Array.isArray(importedData)) { if(typeof importedData === 'object' && importedData !== null && importedData.itens) { alert("Erro: Este parece ser um arquivo de exportação completo. Use a função de 'Carregar' do histórico ou importe um arquivo JSON contendo apenas uma lista simples de itens (array de objetos com nome, preco, qtd, categoriaId)."); } else { alert("Erro: O arquivo JSON deve conter um array (lista) de itens."); } event.target.value = null; return; } if (!confirm(`Importar ${importedData.length} itens deste arquivo JSON? Itens com nomes EXATAMENTE iguais aos existentes serão ignorados.`)) { event.target.value = null; return; } let defaultCategoryId = novoProdutoCategoriaSelect.value; if (!categoriasDefinidas.some(c => c.id === defaultCategoryId)) { const primeiraCategoria = categoriasContainer.querySelector('.categoria'); if (primeiraCategoria) defaultCategoryId = primeiraCategoria.dataset.categoryId; else { _criarEstruturasPadrao(); popularSelectCategorias(); defaultCategoryId = categoriasDefinidas.length > 0 ? categoriasDefinidas[0].id : null; if (!defaultCategoryId) { alert("Erro crítico: Nenhuma categoria encontrada ou criada para importar os itens."); event.target.value = null; return; } alert("Nenhuma categoria existia. Categorias padrão foram criadas."); } } importedData.forEach(item => { if (!item || typeof item.nome !== 'string' || item.nome.trim() === '') { console.warn("Item inválido ou sem nome no JSON, ignorando:", item); itensIgnorados++; return; } const nomeImportado = item.nome.trim(); const nomeNormalizadoImportado = normalizarTexto(nomeImportado); const itemJaExiste = Object.values(dadosLista).some(itemExistente => normalizarTexto(itemExistente.nome) === nomeNormalizadoImportado); if (itemJaExiste) { console.log(`Item "${nomeImportado}" já existe, ignorando.`); itensIgnorados++; return; } let targetCategoryId = item.categoriaId; if (!targetCategoryId || !categoriasDefinidas.some(c => c.id === targetCategoryId)) { console.warn(`Categoria "${targetCategoryId || 'N/A'}" do item "${nomeImportado}" não encontrada. Usando default: "${defaultCategoryId}".`); targetCategoryId = defaultCategoryId; } const novoItemData = { id: gerarIdUnico(), nome: nomeImportado, checked: false, alreadyHave: false, qtd: String(item.qtd || '1.0'), preco: String(item.preco || ''), dataAdicao: getDataAtualFormatada(), categoriaId: targetCategoryId, subcategoriaId: `${targetCategoryId}-geral` }; dadosLista[novoItemData.id] = novoItemData; adicionarItemNaCategoria(novoItemData, targetCategoryId); itensImportados++; }); if (itensImportados > 0) { popularSelectCategorias(); _updateAllItemCategorySelects(); categoriasContainer.querySelectorAll('.categoria').forEach(calcularInfoCategoria); categoriasContainer.querySelectorAll('.categoria').forEach(updateCategoryToggleButtonState); calcularTotalGeral(); aplicarFiltrosVisibilidadeItens(); salvarDadosAtivos(); } alert(`${itensImportados} itens importados com sucesso.\n${itensIgnorados} itens inválidos ou duplicados (nome exato) foram ignorados.`); }; reader.onerror = (e) => { console.error("Erro ao ler arquivo:", e); alert("Erro ao ler o arquivo."); }; reader.readAsText(file); event.target.value = null; };
+             const handleImportarArquivo = (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { const content = e.target.result; let importedData; let itensImportados = 0; let itensIgnorados = 0; try { importedData = JSON.parse(content); } catch (error) { console.error("Erro ao parsear JSON:", error); alert("Erro ao ler o arquivo. Verifique se é um arquivo JSON válido."); event.target.value = null; return; } if (!Array.isArray(importedData)) { if(typeof importedData === 'object' && importedData !== null && importedData.itens) { alert("Erro: Este parece ser um arquivo de exportação completo. Use a função de 'Carregar' do histórico ou importe um arquivo JSON contendo apenas uma lista simples de itens (array de objetos com nome, preco, qtd, categoriaId)."); } else { alert("Erro: O arquivo JSON deve conter um array (lista) de itens."); } event.target.value = null; return; } if (!confirm(`Importar ${importedData.length} itens deste arquivo JSON? Itens com nomes EXATAMENTE iguais aos existentes serão ignorados.`)) { event.target.value = null; return; } let defaultCategoryId = novoProdutoCategoriaSelect.value; if (!categoriasDefinidas.some(c => c.id === defaultCategoryId)) { const primeiraCategoria = categoriasContainer.querySelector('.categoria:not(#historico-compras-container)'); if (primeiraCategoria) defaultCategoryId = primeiraCategoria.dataset.categoryId; else { _criarEstruturasPadrao(); popularSelectCategorias(); defaultCategoryId = categoriasDefinidas.length > 0 ? categoriasDefinidas[0].id : null; if (!defaultCategoryId) { alert("Erro crítico: Nenhuma categoria encontrada ou criada para importar os itens."); event.target.value = null; return; } alert("Nenhuma categoria existia. Categorias padrão foram criadas."); } } importedData.forEach(item => { if (!item || typeof item.nome !== 'string' || item.nome.trim() === '') { console.warn("Item inválido ou sem nome no JSON, ignorando:", item); itensIgnorados++; return; } const nomeImportado = item.nome.trim(); const nomeNormalizadoImportado = normalizarTexto(nomeImportado); const itemJaExiste = Object.values(dadosLista).some(itemExistente => normalizarTexto(itemExistente.nome) === nomeNormalizadoImportado); if (itemJaExiste) { console.log(`Item "${nomeImportado}" já existe, ignorando.`); itensIgnorados++; return; } let targetCategoryId = item.categoriaId; if (!targetCategoryId || !categoriasDefinidas.some(c => c.id === targetCategoryId)) { console.warn(`Categoria "${targetCategoryId || 'N/A'}" do item "${nomeImportado}" não encontrada. Usando default: "${defaultCategoryId}".`); targetCategoryId = defaultCategoryId; } const novoItemData = { id: gerarIdUnico(), nome: nomeImportado, checked: false, alreadyHave: false, qtd: String(item.qtd || '1.0'), preco: String(item.preco || ''), dataAdicao: getDataAtualFormatada(), categoriaId: targetCategoryId, subcategoriaId: `${targetCategoryId}-geral` }; dadosLista[novoItemData.id] = novoItemData; adicionarItemNaCategoria(novoItemData, targetCategoryId); itensImportados++; }); if (itensImportados > 0) { popularSelectCategorias(); _updateAllItemCategorySelects(); categoriasContainer.querySelectorAll('.categoria:not(#historico-compras-container)').forEach(calcularInfoCategoria); categoriasContainer.querySelectorAll('.categoria:not(#historico-compras-container)').forEach(updateCategoryToggleButtonState); calcularTotalGeral(); aplicarFiltrosVisibilidadeItens(); salvarDadosAtivos(); } alert(`${itensImportados} itens importados com sucesso.\n${itensIgnorados} itens inválidos ou duplicados (nome exato) foram ignorados.`); }; reader.onerror = (e) => { console.error("Erro ao ler arquivo:", e); alert("Erro ao ler o arquivo."); }; reader.readAsText(file); event.target.value = null; };
              const popularListaInicial = () => { dadosLista = {}; const hoje = getDataAtualFormatada(); const itensIniciais = [ { nome: 'Banana Prata (kg)', preco: '9.90', cid: 'feira-semanal' }, { nome: 'Laranja Pera (kg)', preco: '5.90', cid: 'feira-semanal' }, { nome: 'Maçã Gala (kg)', preco: '12.50', cid: 'feira-semanal' }, { nome: 'Mamão Formosa (un)', preco: '8.00', cid: 'feira-semanal' }, { nome: 'Alface Crespa (un)', preco: '3.50', cid: 'feira-semanal' }, { nome: 'Tomate Italiano (kg)', preco: '10.80', cid: 'feira-semanal' }, { nome: 'Cebola (kg)', preco: '7.00', cid: 'feira-semanal' }, { nome: 'Batata Inglesa (kg)', preco: '6.00', cid: 'feira-semanal' }, { nome: 'Alho (a granel kg)', preco: '29.90', cid: 'feira-semanal', qtd: '0.2' }, { nome: 'Arroz Agulhinha 5kg', preco: '24.99', cid: 'feira-mensal' }, { nome: 'Feijão Carioca 1kg', preco: '8.99', cid: 'feira-mensal' }, { nome: 'Óleo de Soja 900ml', preco: '5.99', cid: 'feira-mensal' }, { nome: 'Sal Refinado 1kg', preco: '1.99', cid: 'feira-mensal' }, { nome: 'Açúcar Cristal 1kg', preco: '4.49', cid: 'feira-mensal' }, { nome: 'Café Melitta 500g', preco: '16.90', cid: 'feira-mensal' }, { nome: 'Leite Longa Vida (L)', preco: '4.80', cid: 'feira-mensal', qtd: '6.0' }, { nome: 'Macarrão Espaguete 500g', preco: '3.80', cid: 'feira-mensal' }, { nome: 'Sabão em Pó Omo 1.6kg', preco: '25.50', cid: 'limpeza'}, { nome: 'Detergente Ypê Clear 500ml', preco: '2.20', cid: 'limpeza'}, { nome: 'Água Sanitária Qboa 1L', preco: '3.50', cid: 'limpeza'}, { nome: 'Desinfetante Pinho Sol 500ml', preco: '7.80', cid: 'limpeza'}, { nome: 'Esponja Multiuso (pacote)', preco: '4.00', cid: 'limpeza'}, { nome: 'Shampoo Pantene 400ml', preco: '18.90', cid: 'higiene'}, { nome: 'Condicionador Pantene 170ml', preco: '12.90', cid: 'higiene'}, { nome: 'Sabonete Dove Original', preco: '3.50', cid: 'higiene', qtd: '4.0'}, { nome: 'Pasta de Dente Colgate Total 12 90g', preco: '6.50', cid: 'higiene'}, { nome: 'Papel Higiênico Neve (4 rolos)', preco: '8.90', cid: 'higiene'}, { nome: 'Azeite Extra Virgem Gallo 500ml', preco: '32.00', cid: 'condimentos'}, { nome: 'Vinagre de Álcool 750ml', preco: '2.50', cid: 'condimentos'}, { nome: 'Molho de Tomate Heinz Tradicional 300g', preco: '3.20', cid: 'condimentos'}, { nome: 'Maionese Hellmanns 500g', preco: '10.50', cid: 'condimentos'}, { nome: 'Papel Toalha Kitchen (2 rolos)', preco: '6.00', cid: 'outros'}, { nome: 'Filtro de Café Melitta 103 (30 un)', preco: '5.50', cid: 'outros'}, { nome: 'Pano de Chão (un)', preco: '4.00', cid: 'outros'}, ]; itensIniciais.forEach(i => { const d = { id: gerarIdUnico(), nome: i.nome, checked: false, alreadyHave: false, qtd: i.qtd || '1.0', preco: i.preco || '', dataAdicao: hoje }; adicionarItemNaCategoria(d, i.cid, `${i.cid}-geral`); }); };
 
              inicializarApp();
@@ -757,4 +1138,3 @@
 
  </body>
  </html>
-Type something
